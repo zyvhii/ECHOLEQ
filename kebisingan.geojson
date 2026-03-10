@@ -1,0 +1,264 @@
+{
+  "type": "FeatureCollection",
+  "name": "echoleq_noise_samples_ketintang",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K01",
+        "nama": "Sampel Utara 01",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 91.2,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.732691646, -7.310066166]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K02",
+        "nama": "Sampel Utara 02",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 84.7,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.732080015, -7.310814032]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K03",
+        "nama": "Sampel Utara 03",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 79.4,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.731522815, -7.311483504]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K04",
+        "nama": "Sampel Inti 01",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 87.9,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.731012982, -7.31215264]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K05",
+        "nama": "Sampel Inti 02",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 76.1,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.730736919, -7.312504436]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K06",
+        "nama": "Sampel Inti 03",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 82.8,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.729770294, -7.313707614]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K07",
+        "nama": "Sampel Inti 04",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 71.6,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.728932239, -7.314783484]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K08",
+        "nama": "Sampel Inti 05",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 89.5,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.728650584, -7.315144154]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K09",
+        "nama": "Sampel Tengah 01",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 73.8,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.728334137, -7.315531527]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K10",
+        "nama": "Sampel Tengah 02",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 68.7,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.728134935, -7.315776927]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K11",
+        "nama": "Sampel Tengah 03",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 86.3,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.727845313, -7.316136601]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K12",
+        "nama": "Sampel Tengah 04",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 77.2,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.727572618, -7.316475304]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K13",
+        "nama": "Sampel Selatan 01",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 69.4,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.727228229, -7.316876192]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K14",
+        "nama": "Sampel Selatan 02",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 81.8,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.726546419, -7.317792494]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K15",
+        "nama": "Sampel Selatan 03",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 74.1,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.726182901, -7.318242562]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K16",
+        "nama": "Sampel Selatan 04",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 66.9,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.725128899, -7.319622724]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K17",
+        "nama": "Sampel Ujung 01",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 72.6,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.723740403, -7.321330459]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "K18",
+        "nama": "Sampel Ujung 02",
+        "kelurahan": "Ketintang",
+        "baseline_dba": 61.8,
+        "sumber": "dummy_interpolasi"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [112.721878399, -7.32368913]
+      }
+    }
+  ]
+}
