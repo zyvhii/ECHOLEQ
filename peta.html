@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECHOLEQ: Analisis Spasial Tingkat Kebisingan Akibat Aktivitas Kereta Api Menggunakan Metode Equivalent Continuous Sound Level (Leq) dan Pendekatan Sistem Informasi Geografis (GIS) untuk Identifikasi Tingkat Paparan terhadap Permukiman serta Rekomendasi Vegetasi sebagai Peredam Suara (Studi Kasus : Kelurahan Ketintang, Kota Surabaya)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{--ink:#102033;--muted:#536273;--panel:rgba(8,15,28,.95);--glass:rgba(255,255,255,.9);--rail:#0f2744;--red:#d92d20;--orange:#f97316;--yellow:#facc15;--green:#22c55e;--cyan:#06b6d4;--shadow:0 28px 70px rgba(15,23,42,.18)}
+  *{box-sizing:border-box} html,body{margin:0;min-height:100%}
+  body{font-family:"Sora",sans-serif;color:var(--ink);background:radial-gradient(circle at 12% 12%,rgba(6,182,212,.16),transparent 26%),radial-gradient(circle at 88% 14%,rgba(250,204,21,.16),transparent 24%),linear-gradient(135deg,#f8fafc 0%,#eff6ff 56%,#fefce8 100%)}
+  code{padding:2px 7px;border-radius:999px;font-family:"Space Grotesk",sans-serif;font-size:.92em}
+  .side code,.intro code,.hub code{background:rgba(255,255,255,.12);color:#d9f99d}
+  .floating code{background:rgba(15,23,42,.08);color:#0f2744}
+  .screen{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;padding:20px;transition:opacity .45s ease,visibility .45s ease}
+  .screen.hidden{opacity:0;visibility:hidden;pointer-events:none;display:none}
+  .intro{background:
+    radial-gradient(circle at 10% 15%,rgba(6,182,212,.18),transparent 28%),
+    radial-gradient(circle at 88% 20%,rgba(250,204,21,.16),transparent 26%),
+    linear-gradient(145deg,rgba(8,15,28,.96),rgba(15,23,42,.98))}
+  .hub{background:linear-gradient(140deg,rgba(248,250,252,.92),rgba(224,242,254,.88));backdrop-filter:blur(14px)}
+  .intro-card,.hub-card{width:min(1180px,100%);box-shadow:var(--shadow)}
+  .intro-card{padding:34px;border-radius:36px;color:#f8fafc;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px)}
+  .hub-card{padding:32px;border-radius:36px;background:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.65);color:var(--ink)}
+  .tag,.brand{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.08);font-family:"Space Grotesk",sans-serif;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  .hub .tag{background:rgba(15,23,42,.08);color:#0f2744}
+  .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#22c55e);box-shadow:0 0 0 7px rgba(6,182,212,.14)}
+  .intro-split{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);gap:24px;align-items:stretch}
+  .intro-copy h1{margin:20px 0 12px;font-size:clamp(44px,8vw,88px);line-height:.92;letter-spacing:-.07em}
+  .intro-copy p{margin:0;max-width:760px;line-height:1.8;color:rgba(248,250,252,.82)}
+  .intro-copy small{display:block;margin-top:18px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:rgba(248,250,252,.6)}
+  .intro-panel{display:grid;gap:12px}
+  .intro-chip{padding:18px 18px 20px;border-radius:26px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}
+  .intro-chip span{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(248,250,252,.56)}
+  .intro-chip strong{display:block;margin-top:8px;font-size:22px;line-height:1.15}
+  .intro-actions,.mode-switch,.menu-grid{display:grid;gap:10px}
+  .intro-actions{margin-top:28px;grid-template-columns:repeat(2,minmax(0,220px))}
+  .intro button,.mode-btn,.floating-btn,.floating-peek,.hub-mode,.back-btn{border:0;border-radius:999px;font:inherit;font-weight:700;cursor:pointer}
+  .intro button,.hub-mode{padding:14px 20px;color:#082f49;background:linear-gradient(135deg,#67e8f9,#86efac)}
+  .intro .secondary{background:rgba(255,255,255,.08);color:#f8fafc;border:1px solid rgba(255,255,255,.12)}
+  .mode-switch{margin-top:14px;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .mode-btn{padding:10px 12px;background:rgba(255,255,255,.08);color:rgba(248,250,252,.86);border:1px solid rgba(255,255,255,.08)}
+  .mode-btn.active{background:linear-gradient(135deg,rgba(103,232,249,.22),rgba(134,239,172,.24));color:#f8fafc;border-color:rgba(103,232,249,.26)}
+  .hub-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+  .hub-head h2{margin:16px 0 10px;font-size:clamp(30px,5vw,48px);line-height:1;letter-spacing:-.05em}
+  .hub-head p{margin:0;max-width:760px;line-height:1.75;color:#425466}
+  .photo-wall{margin-top:24px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+  .member-card{padding:12px;border-radius:24px;background:linear-gradient(180deg,rgba(15,23,42,.03),rgba(14,165,233,.08));border:1px solid rgba(148,163,184,.22)}
+  .member-photo{aspect-ratio:4/5;border-radius:18px;overflow:hidden;background:#dbeafe}
+  .member-photo img{display:block;width:100%;height:100%;object-fit:cover}
+  .member-card strong{display:block;margin-top:12px;font-size:17px}
+  .member-card span{display:block;margin-top:4px;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.08em}
+  .menu-grid{margin-top:24px;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .menu-card{padding:20px;border-radius:28px;background:linear-gradient(155deg,rgba(15,23,42,.98),rgba(14,116,144,.92));color:#f8fafc;box-shadow:0 22px 44px rgba(15,23,42,.14)}
+  .menu-card h3{margin:12px 0 8px;font-size:24px;line-height:1.08}
+  .menu-card p{margin:0 0 18px;line-height:1.7;color:rgba(248,250,252,.74)}
+  .back-btn{padding:11px 16px;background:rgba(255,255,255,.08);color:#f8fafc;border:1px solid rgba(255,255,255,.12)}
+  .hub .back-btn{background:rgba(15,23,42,.06);color:#0f2744;border:1px solid rgba(15,23,42,.08)}
+  .page{padding:18px;height:100vh;overflow:hidden}
+  .layout{max-width:1540px;height:100%;margin:0 auto;display:grid;grid-template-columns:470px minmax(0,1fr);gap:18px}
+  .side,.map-shell{border-radius:30px;overflow:hidden;box-shadow:var(--shadow)}
+  .side{height:100%;overflow-y:auto;padding:26px;color:#f8fafc;background:radial-gradient(circle at top right,rgba(6,182,212,.24),transparent 30%),linear-gradient(180deg,rgba(15,23,42,.95),rgba(2,6,23,.99));scrollbar-width:thin}
+  .team{margin-top:12px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:rgba(248,250,252,.56)}
+  .title{margin:16px 0 10px;font-size:clamp(20px,2.05vw,28px);line-height:1.42;letter-spacing:-.02em;font-weight:700}
+  .lead{margin:0;font-size:14px;line-height:1.75;color:rgba(248,250,252,.78)}
+  .card,.slider,.result,.buffers,.chart-card,.recommendation{margin-top:18px;padding:16px 18px;border-radius:24px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08)}
+  .eyebrow{display:block;margin-bottom:8px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(248,250,252,.58)}
+  .card strong,.result strong{display:block;font-size:24px;line-height:1.2}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}
+  .mini{padding:14px 16px;border-radius:20px;background:rgba(255,255,255,.06)}
+  .mini strong{display:block;margin-top:8px;font-size:22px;line-height:1.1}
+  .head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .slider-value{font-size:26px;font-weight:800;color:#86efac}
+  input[type="range"]{width:100%;margin-top:14px;accent-color:#22c55e}
+  .slider p,.result p,.buffers p{margin:10px 0 0;font-size:13px;line-height:1.7;color:rgba(248,250,252,.78)}
+  .legend,.buffer-list{margin-top:14px;display:grid;gap:10px}
+  .legend-item,.buffer-item{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:rgba(248,250,252,.82)}
+  .mark,.bmark{width:15px;height:15px;border-radius:5px;flex:0 0 auto;margin-top:2px}
+  .buffer-item strong{display:block;margin-top:2px;font-size:15px}
+  .buffer-item span{display:block;margin-top:2px;color:rgba(248,250,252,.76)}
+  .badge{display:inline-flex;margin-top:10px;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:700}
+  .active-card{border-color:rgba(103,232,249,.28);box-shadow:inset 0 0 0 1px rgba(103,232,249,.12)}
+  .mode-panel strong{font-size:22px}
+  .mode-copy{margin:12px 0 0;font-size:13px;line-height:1.7;color:rgba(248,250,252,.76)}
+  .mode-section{display:none}
+  .mode-section.visible{display:block}
+  .mode-grid.visible{display:grid}
+  .comparison-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+  .comparison-card{padding:14px 16px;border-radius:20px;background:rgba(255,255,255,.06)}
+  .comparison-card small{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(248,250,252,.58)}
+  .comparison-card strong{display:block;margin-top:8px;font-size:21px}
+  .comparison-card span{display:block;margin-top:4px;font-size:13px;color:rgba(248,250,252,.74);line-height:1.55}
+  .impact-list{display:grid;gap:10px;margin-top:16px}
+  .impact-item{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 14px;border-radius:18px;background:rgba(255,255,255,.06)}
+  .impact-item span{font-size:13px;color:rgba(248,250,252,.74)}
+  .impact-item strong{font-size:15px}
+  .chart-wrap{margin-top:14px;padding:12px 10px;border-radius:20px;background:rgba(255,255,255,.05)}
+  #noiseChart{width:100%;height:220px}
+  #impactChart{width:100%;height:220px}
+  .map-shell{position:sticky;top:18px;height:calc(100vh - 36px);background:#dbeafe}
+  #map{width:100%;height:100%}
+  .floating{position:absolute;top:18px;right:18px;z-index:550;width:min(410px,calc(100% - 36px));padding:18px;border-radius:24px;background:var(--glass);backdrop-filter:blur(18px);box-shadow:0 22px 44px rgba(15,23,42,.15);transition:opacity .25s ease,transform .25s ease}
+  .floating.hidden{opacity:0;transform:translateY(-10px);pointer-events:none;display:none}
+  .floating-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .floating-btn,.floating-peek{padding:9px 14px;background:rgba(15,23,42,.08);color:#0f2744}
+  .floating-peek{position:absolute;top:18px;left:18px;z-index:551;display:none;background:rgba(255,255,255,.95);box-shadow:0 18px 36px rgba(15,23,42,.12)}
+  .floating-peek.visible{display:inline-flex}
+  .floating h3{margin:0;font-size:16px}
+  .floating p{margin:10px 0 0;font-size:13px;line-height:1.7;color:var(--muted)}
+  .status{margin-top:14px;padding:14px 16px;border-radius:18px;background:linear-gradient(135deg,rgba(6,182,212,.12),rgba(34,197,94,.14));border:1px solid rgba(6,182,212,.14)}
+  .status strong{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#0f766e}
+  .status span{display:block;margin-top:6px;font-size:14px;line-height:1.5;color:#134e4a;font-weight:700}
+  .focus-label{font-family:"Space Grotesk",sans-serif;font-size:12px;font-weight:700;color:#082f49;background:rgba(255,255,255,.9);padding:8px 12px;border-radius:999px;box-shadow:0 12px 22px rgba(15,23,42,.12)}
+  .leaflet-control-layers,.leaflet-bar a{border-radius:16px}
+  .leaflet-control-layers{box-shadow:0 16px 34px rgba(15,23,42,.14)}
+  .leaflet-popup-content-wrapper{border-radius:22px;background:rgba(255,255,255,.96);box-shadow:0 20px 40px rgba(15,23,42,.18)}
+  .leaflet-popup-content{margin:14px 16px;font-family:"Sora",sans-serif;line-height:1.65}
+  .popup-title{display:block;margin-bottom:6px;font-size:15px;font-weight:800;color:var(--ink)}
+  @media (max-width:1200px){.page{height:auto;overflow:visible}.layout{height:auto;grid-template-columns:1fr}.side{height:auto;overflow:visible}.map-shell{position:relative;top:auto;height:auto;min-height:78vh}#map{min-height:78vh}.intro-split,.hub-head{grid-template-columns:1fr;display:grid}.photo-wall{grid-template-columns:repeat(3,minmax(0,1fr))}.menu-grid,.comparison-grid{grid-template-columns:1fr}}
+  @media (max-width:720px){.page{padding:12px}.side{padding:20px}.grid,.intro-actions,.mode-switch,.photo-wall,.menu-grid,.comparison-grid{grid-template-columns:1fr}.floating{position:static;width:auto;margin:12px}.floating-peek{top:12px;left:12px}.intro-card,.hub-card{padding:22px}.hub-head{display:grid}}
+</style>
+</head>
+<body>
+  <div class="screen intro" id="introScreen">
+    <div class="intro-card">
+      <div class="tag"><span class="dot"></span><span>ECHOLEQ</span></div>
+      <div class="intro-split">
+        <div class="intro-copy">
+          <small>Studi Kasus Kelurahan Ketintang</small>
+          <h1>ECHOLEQ</h1>
+          <p>Platform ini difokuskan untuk membaca paparan kebisingan akibat aktivitas kereta api pada permukiman di Kelurahan Ketintang, Kota Surabaya. ECHOLEQ memadukan buffer rel, interpolasi titik kebisingan, dan skenario vegetasi untuk menunjukkan area aman maupun area yang masih rentan.</p>
+          <div class="intro-actions">
+            <button id="openInteractive" type="button">Masuk ke Peta</button>
+            <button class="secondary" id="openHub" type="button">Lihat Kelompok 22</button>
+          </div>
+        </div>
+        <div class="intro-panel">
+          <div class="intro-chip">
+            <span>Fokus studi</span>
+            <strong>Kelurahan Ketintang</strong>
+          </div>
+          <div class="intro-chip">
+            <span>Klasifikasi aman</span>
+            <strong>&lt; 55 dBA (aman)</strong>
+          </div>
+          <div class="intro-chip">
+            <span>Klasifikasi waspada</span>
+            <strong>55-70 dBA (waspada)</strong>
+          </div>
+          <div class="intro-chip">
+            <span>Klasifikasi rentan</span>
+            <strong>&gt; 70 dBA (rentan tinggi)</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen hub hidden" id="hubScreen">
+    <div class="hub-card">
+      <div class="hub-head">
+        <div>
+          <div class="tag"><span class="dot"></span><span>Kelompok 22</span></div>
+          <h2>Showcase Tim ECHOLEQ</h2>
+          <p>Galeri ini menampilkan anggota Kelompok 22 sekaligus pintu masuk ke tiga mode eksplorasi. Setiap mode dibuat berbeda: peta interaktif untuk pembacaan titik, perbandingan untuk grafik hubungan jarak dan kebisingan, serta mitigasi untuk simulasi vegetasi dan penurunan dBA.</p>
+        </div>
+        <button class="back-btn" id="backToIntro" type="button">Kembali</button>
+      </div>
+
+      <div class="photo-wall">
+        <article class="member-card">
+          <div class="member-photo"><img src="foto/Adista.png" alt="Foto Adista"></div>
+          <strong>Adista</strong>
+          <span>Anggota Kelompok 22</span>
+        </article>
+        <article class="member-card">
+          <div class="member-photo"><img src="foto/Bara.png" alt="Foto Bara"></div>
+          <strong>Bara</strong>
+          <span>Anggota Kelompok 22</span>
+        </article>
+        <article class="member-card">
+          <div class="member-photo"><img src="foto/Lumut.png" alt="Foto Lumut"></div>
+          <strong>Lumut</strong>
+          <span>Anggota Kelompok 22</span>
+        </article>
+        <article class="member-card">
+          <div class="member-photo"><img src="foto/Nasywa.png" alt="Foto Nasywa"></div>
+          <strong>Nasywa</strong>
+          <span>Anggota Kelompok 22</span>
+        </article>
+        <article class="member-card">
+          <div class="member-photo"><img src="foto/Nayla.png" alt="Foto Nayla"></div>
+          <strong>Nayla</strong>
+          <span>Anggota Kelompok 22</span>
+        </article>
+      </div>
+
+      <div class="menu-grid">
+        <article class="menu-card">
+          <span class="eyebrow" style="color:rgba(248,250,252,.58);">Mode 01</span>
+          <h3>Peta Interaktif</h3>
+          <p>Fokus pada klik titik di area Ketintang, pembacaan nilai dBA hasil interpolasi, dan paparan langsung di sekitar buffer rel.</p>
+          <button class="hub-mode" data-mode="interactive" type="button">Buka mode</button>
+        </article>
+        <article class="menu-card">
+          <span class="eyebrow" style="color:rgba(248,250,252,.58);">Mode 02</span>
+          <h3>Perbandingan</h3>
+          <p>Menampilkan grafik perbandingan kebisingan terhadap jarak dari rel, selisih antar zona, dan ringkasan tingkat risiko paparan.</p>
+          <button class="hub-mode" data-mode="comparison" type="button">Buka mode</button>
+        </article>
+        <article class="menu-card">
+          <span class="eyebrow" style="color:rgba(248,250,252,.58);">Mode 03</span>
+          <h3>Mitigasi</h3>
+          <p>Menguji skenario vegetasi, melihat perubahan warna buffer, dan membaca rekomendasi penurunan kebisingan yang paling masuk akal.</p>
+          <button class="hub-mode" data-mode="mitigation" type="button">Buka mode</button>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <div class="page">
+    <main class="layout">
+      <aside class="side">
+        <div class="brand"><span class="dot"></span><span>ECHOLEQ</span></div>
+        <div class="team">Kelompok 22</div>
+        <div class="title">ECHOLEQ: Analisis Spasial Tingkat Kebisingan Akibat Aktivitas Kereta Api Menggunakan Metode Equivalent Continuous Sound Level (Leq) dan Pendekatan Sistem Informasi Geografis (GIS) untuk Identifikasi Tingkat Paparan terhadap Permukiman serta Rekomendasi Vegetasi sebagai Peredam Suara (Studi Kasus : Kelurahan Ketintang, Kota Surabaya)</div>
+        <p class="lead" id="leadText">Peta difokuskan ke Ketintang. Buffer 10 m, 20 m, dan 40 m dibentuk langsung dari <code>jrelka.geojson</code>. Nilai kebisingan titik dihitung dari interpolasi dummy data pada <code>kebisingan.geojson</code>.</p>
+
+        <section class="card mode-panel">
+          <div class="head">
+            <div>
+              <span class="eyebrow">Mode aktif</span>
+              <strong id="modeTitle">Peta Interaktif</strong>
+            </div>
+            <button class="back-btn" id="backToHub" type="button">Kembali</button>
+          </div>
+          <p class="mode-copy" id="modeDescription">Mode ini fokus pada pembacaan titik hasil interpolasi dan zona buffer 10 m, 20 m, serta 40 m di sekitar jalur rel Ketintang.</p>
+          <div class="mode-switch">
+            <button class="mode-btn active" data-mode="interactive">Interaktif</button>
+            <button class="mode-btn" data-mode="comparison">Perbandingan</button>
+            <button class="mode-btn" data-mode="mitigation">Mitigasi</button>
+          </div>
+        </section>
+
+        <section class="card mode-section visible" data-modes="interactive">
+          <span class="eyebrow">Klasifikasi kebisingan</span>
+          <strong>&lt; 55 dBA aman</strong>
+          <p>Untuk studi Ketintang, nilai <code>55-70 dBA</code> dibaca sebagai <strong>waspada</strong> dan nilai di atas <code>70 dBA</code> dibaca sebagai <strong>rentan tinggi</strong> terhadap paparan permukiman di sekitar rel.</p>
+        </section>
+
+        <div class="grid mode-section mode-grid visible" data-modes="interactive comparison">
+          <section class="mini">
+            <span class="eyebrow">Titik sampel</span>
+            <strong id="sampleCount">Memuat...</strong>
+          </section>
+          <section class="mini">
+            <span class="eyebrow">Rata-rata aktif</span>
+            <strong id="averageDb">Memuat...</strong>
+          </section>
+        </div>
+
+        <section class="buffers mode-section visible" data-modes="interactive">
+          <span class="eyebrow">Buffer jalur rel</span>
+          <p>Warna buffer berubah mengikuti kondisi dBA aktif setelah pengaruh vegetasi.</p>
+          <div class="buffer-list">
+            <div class="buffer-item"><span class="bmark" id="buffer10Swatch"></span><div><small>Zona 10 meter</small><strong id="buffer10Value">Memuat...</strong><span id="buffer10Label">Memuat klasifikasi...</span></div></div>
+            <div class="buffer-item"><span class="bmark" id="buffer20Swatch"></span><div><small>Zona 20 meter</small><strong id="buffer20Value">Memuat...</strong><span id="buffer20Label">Memuat klasifikasi...</span></div></div>
+            <div class="buffer-item"><span class="bmark" id="buffer40Swatch"></span><div><small>Zona 40 meter</small><strong id="buffer40Value">Memuat...</strong><span id="buffer40Label">Memuat klasifikasi...</span></div></div>
+          </div>
+        </section>
+
+        <section class="result active-card mode-section visible" id="resultCard" data-modes="interactive">
+          <span class="eyebrow">Hasil klik kiri</span>
+          <strong id="activeDb">Klik peta untuk membaca dBA</strong>
+          <p id="activeMeta">Titik klik dihitung dengan interpolasi dummy data kebisingan dan koreksi jarak ke rel. Fokus tampilan tetap pada Ketintang.</p>
+          <div class="badge" id="activeBadge" style="background:rgba(255,255,255,.08);color:#f8fafc;">Menunggu titik klik</div>
+        </section>
+
+        <section class="card mode-section" id="comparisonCard" data-modes="comparison">
+          <span class="eyebrow">Ringkasan perbandingan</span>
+          <div class="comparison-grid">
+            <div class="comparison-card">
+              <small>Eksposur tertinggi</small>
+              <strong id="comparisonPeak">Memuat...</strong>
+              <span id="comparisonPeakMeta">Membaca zona paling dekat dengan rel.</span>
+            </div>
+            <div class="comparison-card">
+              <small>Gradien 10 m ke 40 m</small>
+              <strong id="comparisonDrop">Memuat...</strong>
+              <span id="comparisonDropMeta">Selisih paparan antar ujung buffer.</span>
+            </div>
+            <div class="comparison-card">
+              <small>Zona tidak aman</small>
+              <strong id="comparisonRisk">Memuat...</strong>
+              <span id="comparisonRiskMeta">Jumlah buffer yang masih di atas 55 dBA.</span>
+            </div>
+          </div>
+          <p id="comparisonNarrative">Grafik perbandingan akan membaca pola penurunan kebisingan seiring menjauh dari rel serta memperlihatkan pengaruh vegetasi aktif.</p>
+        </section>
+
+        <section class="chart-card mode-section" id="chartCard" data-modes="comparison">
+          <span class="eyebrow">Grafik dBA terhadap jarak</span>
+          <p>Grafik ini membandingkan kondisi dasar dan kondisi aktif pada buffer 10 m, 20 m, dan 40 m dari rel, lengkap dengan garis ambang aman 55 dBA.</p>
+          <div class="chart-wrap">
+            <canvas id="noiseChart"></canvas>
+          </div>
+        </section>
+
+        <section class="slider mode-section" data-modes="mitigation">
+          <div class="head">
+            <span class="eyebrow" style="margin:0;">Vegetasi sekitar rel</span>
+            <span class="slider-value" id="vegetationValue">0%</span>
+          </div>
+          <input id="vegetationRange" type="range" min="0" max="60" step="5" value="0">
+          <p id="reductionHint">Vegetasi 0% berarti kondisi dasar. Saat persentase dinaikkan, titik sampel, hasil klik, dan warna buffer akan ikut menyesuaikan.</p>
+          <div class="legend">
+            <div class="legend-item"><span class="mark" style="background:#22c55e;"></span><span>Aman: &lt; 55 dBA</span></div>
+            <div class="legend-item"><span class="mark" style="background:#facc15;"></span><span>Waspada: 55-70 dBA</span></div>
+            <div class="legend-item"><span class="mark" style="background:#d92d20;"></span><span>Rentan tinggi: &gt; 70 dBA</span></div>
+          </div>
+        </section>
+
+        <section class="recommendation mode-section" id="recommendationCard" data-modes="mitigation">
+          <span class="eyebrow">Rekomendasi mitigasi</span>
+          <strong id="recommendValue">Vegetasi 0%</strong>
+          <p id="recommendText">Mode mitigasi akan menghitung kebutuhan vegetasi minimum agar zona 40 meter bisa turun mendekati atau melewati ambang aman 55 dBA.</p>
+          <div class="badge" id="recommendBadge" style="background:rgba(255,255,255,.08);color:#f8fafc;">Mitigasi belum dihitung</div>
+        </section>
+
+        <section class="chart-card mode-section" id="impactChartCard" data-modes="mitigation">
+          <span class="eyebrow">Grafik dampak mitigasi</span>
+          <p>Grafik ini membandingkan kondisi dasar dan kondisi sesudah vegetasi diterapkan pada tiga zona buffer di sekitar rel.</p>
+          <div class="chart-wrap">
+            <canvas id="impactChart"></canvas>
+          </div>
+        </section>
+
+        <section class="card mode-section" data-modes="mitigation">
+          <span class="eyebrow">Dampak per zona</span>
+          <div class="impact-list">
+            <div class="impact-item"><span>Zona 10 meter</span><strong id="impact10">Memuat...</strong></div>
+            <div class="impact-item"><span>Zona 20 meter</span><strong id="impact20">Memuat...</strong></div>
+            <div class="impact-item"><span>Zona 40 meter</span><strong id="impact40">Memuat...</strong></div>
+          </div>
+        </section>
+      </aside>
+
+      <section class="map-shell">
+        <div id="map"></div>
+        <button class="floating-peek visible" id="floatingPeek" type="button">Tampilkan info</button>
+        <div class="floating hidden" id="floatingPanel">
+          <div class="floating-head">
+            <h3>ECHOLEQ Monitor</h3>
+            <button class="floating-btn" id="floatingHide" type="button">Sembunyikan</button>
+          </div>
+          <p id="floatingCopy">Peta dikunci agar tidak ikut bergerak saat panel kiri discroll. Klik kiri pada area mana pun di Ketintang untuk membaca nilai dBA. Buffer 10 m, 20 m, dan 40 m mengikuti jalur pada <code>jrelka.geojson</code>, sedangkan interpolasi berasal dari titik sampel fluktuatif pada <code>kebisingan.geojson</code>.</p>
+          <div class="status">
+            <strong>Status</strong>
+            <span id="statusText">Memuat jalur rel dan titik kebisingan...</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+  const map = L.map("map", {
+    zoomControl: false,
+    dragging: false,
+    scrollWheelZoom: false,
+    doubleClickZoom: false,
+    boxZoom: false,
+    keyboard: false,
+    touchZoom: "center",
+    tap: false,
+    zoomAnimation: true,
+    fadeAnimation: true,
+    markerZoomAnimation: true,
+    zoomSnap: 0.25,
+    zoomDelta: 0.5,
+    minZoom: 15,
+    maxZoom: 19
+  });
+  L.control.zoom({ position: "bottomright" }).addTo(map);
+
+  const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: "&copy; OpenStreetMap contributors"
+  });
+  const carto = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+    maxZoom: 20,
+    attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
+  });
+  carto.addTo(map);
+
+  map.createPane("mask");
+  map.createPane("focus");
+  map.createPane("buffer40");
+  map.createPane("buffer20");
+  map.createPane("buffer10");
+  map.createPane("halos");
+  map.createPane("samples");
+  map.createPane("rail");
+  map.createPane("click");
+  map.getPane("mask").style.zIndex = 400;
+  map.getPane("mask").style.pointerEvents = "none";
+  map.getPane("focus").style.zIndex = 401;
+  map.getPane("buffer40").style.zIndex = 402;
+  map.getPane("buffer20").style.zIndex = 403;
+  map.getPane("buffer10").style.zIndex = 404;
+  map.getPane("halos").style.zIndex = 405;
+  map.getPane("samples").style.zIndex = 406;
+  map.getPane("rail").style.zIndex = 407;
+  map.getPane("click").style.zIndex = 408;
+
+  const focusPolygon = turf.polygon([[
+    [112.7202, -7.3248],
+    [112.7338, -7.3248],
+    [112.7338, -7.3093],
+    [112.7202, -7.3093],
+    [112.7202, -7.3248]
+  ]]);
+
+  const bufferConfigs = [
+    { distance: 40, offset: -20, pane: "buffer40", fillOpacity: 0.15 },
+    { distance: 20, offset: -5, pane: "buffer20", fillOpacity: 0.22 },
+    { distance: 10, offset: 7, pane: "buffer10", fillOpacity: 0.30 }
+  ];
+
+  const state = {
+    vegetationPercent: 0,
+    railSource: null,
+    sampleData: null,
+    sampleLayer: L.layerGroup().addTo(map),
+    haloLayer: L.layerGroup().addTo(map),
+    bufferLayers: {},
+    clickMarker: null,
+    noiseChart: null,
+    impactChart: null,
+    mode: "interactive",
+    dataReady: false
+  };
+
+  const focusLayer = L.geoJSON(focusPolygon, {
+    pane: "focus",
+    style: function() {
+      return { color: "#0891b2", weight: 1.6, dashArray: "8 8", opacity: 0.9, fillOpacity: 0.02 };
+    }
+  }).addTo(map);
+
+  const ketintangRing = focusPolygon.geometry.coordinates[0].map(function(coord) {
+    return [coord[1], coord[0]];
+  });
+  const focusMask = L.polygon([
+    [
+      [-7.3470, 112.6890],
+      [-7.3470, 112.7675],
+      [-7.2860, 112.7675],
+      [-7.2860, 112.6890]
+    ],
+    ketintangRing
+  ], {
+    pane: "mask",
+    stroke: false,
+    fillColor: "#f8fafc",
+    fillOpacity: 0.8,
+    fillRule: "evenodd",
+    interactive: false
+  }).addTo(map);
+
+  const focusBounds = focusLayer.getBounds().pad(0.04);
+
+  L.marker([-7.3161, 112.7269], {
+    interactive: false,
+    icon: L.divIcon({ className: "focus-label", html: "Kelurahan Ketintang", iconSize: null })
+  }).addTo(map);
+
+  function setStatus(text) {
+    document.getElementById("statusText").textContent = text;
+  }
+
+  function setFloatingCopy(mode) {
+    const copy = {
+      interactive: 'Mode interaktif menonjolkan klik kiri di area Ketintang untuk membaca nilai <code>dBA</code> hasil interpolasi. Kelas yang dipakai adalah <code>&lt; 55 dBA</code> aman, <code>55-70 dBA</code> waspada, dan <code>&gt; 70 dBA</code> rentan tinggi.',
+      comparison: 'Mode perbandingan menyorot grafik hubungan jarak terhadap rel dan perubahan <code>dBA</code> pada tiga buffer. Skenario vegetasi aktif langsung terbaca pada warna zona dan jumlah area yang masih waspada atau rentan tinggi.',
+      mitigation: 'Mode mitigasi menampilkan kebutuhan vegetasi minimum serta dampaknya pada warna buffer. Ambang aman yang dipakai tetap <code>&lt; 55 dBA</code> untuk area permukiman di Ketintang.'
+    };
+    document.getElementById("floatingCopy").innerHTML = copy[mode] || copy.interactive;
+  }
+
+  function toggleFloatingPanel(visible) {
+    document.getElementById("floatingPanel").classList.toggle("hidden", !visible);
+    document.getElementById("floatingPeek").classList.toggle("visible", !visible);
+  }
+
+  function setModeButtons(mode) {
+    document.querySelectorAll(".mode-btn").forEach(function(button) {
+      button.classList.toggle("active", button.dataset.mode === mode);
+    });
+  }
+
+  function setActiveCard(cardId) {
+    ["resultCard", "chartCard", "recommendationCard"].forEach(function(id) {
+      const element = document.getElementById(id);
+      element.classList.toggle("active-card", id === cardId);
+    });
+    const activeCard = document.getElementById(cardId);
+    if (activeCard) {
+      activeCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+
+  function focusMap(animate) {
+    if (!focusBounds.isValid()) return;
+    map.setMaxBounds(focusBounds.pad(0.16));
+    map.options.maxBoundsViscosity = 1.0;
+    if (animate) {
+      map.flyToBounds(focusBounds, {
+        padding: [28, 28],
+        duration: 1.05,
+        maxZoom: 16.75
+      });
+      return;
+    }
+    map.fitBounds(focusBounds, {
+      padding: [28, 28],
+      animate: false,
+      maxZoom: 16.75
+    });
+  }
+
+  function toggleScreen(screenId, visible) {
+    document.getElementById(screenId).classList.toggle("hidden", !visible);
+  }
+
+  function showHubScreen() {
+    toggleScreen("introScreen", false);
+    toggleScreen("hubScreen", true);
+    toggleFloatingPanel(false);
+  }
+
+  function showIntroScreen() {
+    toggleScreen("introScreen", true);
+    toggleScreen("hubScreen", false);
+    toggleFloatingPanel(false);
+  }
+
+  function enterMode(mode) {
+    toggleScreen("introScreen", false);
+    toggleScreen("hubScreen", false);
+    toggleFloatingPanel(false);
+    setTimeout(function() {
+      map.invalidateSize();
+      activateMode(mode, {
+        applyRecommendation: mode === "mitigation"
+      });
+    }, 260);
+  }
+
+  function formatDb(value) {
+    return value.toFixed(1).replace(".0", "") + " dBA";
+  }
+
+  function noiseClass(db) {
+    if (db > 70) return { label: "Rentan tinggi", safety: "Tidak aman", color: "#d92d20", badge: "rgba(217,45,32,0.12)", text: "#991b1b" };
+    if (db >= 55) return { label: "Waspada", safety: "Tidak aman", color: "#facc15", badge: "rgba(250,204,21,0.18)", text: "#854d0e" };
+    return { label: "Aman", safety: "Aman", color: "#22c55e", badge: "rgba(34,197,94,0.14)", text: "#166534" };
+  }
+
+  function vegetationReduction(baseDb, vegetationPercent) {
+    const activePercent = typeof vegetationPercent === "number" ? vegetationPercent : state.vegetationPercent;
+    if (baseDb > 70) return activePercent * 0.08;
+    if (baseDb >= 55) return activePercent * 0.06;
+    return activePercent * 0.05;
+  }
+
+  function currentSample(feature, vegetationPercent) {
+    const baseline = feature.properties.baseline_dba;
+    const reduction = vegetationReduction(baseline, vegetationPercent);
+    return {
+      baseline: baseline,
+      reduction: Number(reduction.toFixed(1)),
+      current: Number(Math.max(baseline - reduction, 42).toFixed(1))
+    };
+  }
+
+  function averageCurrentDb(vegetationPercent) {
+    if (!state.sampleData) return 0;
+    const total = state.sampleData.features.reduce(function(sum, feature) {
+      return sum + currentSample(feature, vegetationPercent).current;
+    }, 0);
+    return total / state.sampleData.features.length;
+  }
+
+  function currentBufferDb(config, vegetationPercent) {
+    return Number(Math.max(averageCurrentDb(vegetationPercent) + config.offset, 42).toFixed(1));
+  }
+
+  function chartValues() {
+    return [10, 20, 40].map(function(distance) {
+      const config = bufferConfigs.find(function(item) {
+        return item.distance === distance;
+      });
+      return currentBufferDb(config);
+    });
+  }
+
+  function baselineChartValues() {
+    return [10, 20, 40].map(function(distance) {
+      const config = bufferConfigs.find(function(item) {
+        return item.distance === distance;
+      });
+      return currentBufferDb(config, 0);
+    });
+  }
+
+  function recommendedVegetation() {
+    const targetConfig = bufferConfigs.find(function(config) {
+      return config.distance === 40;
+    });
+    const baselineDb = currentBufferDb(targetConfig, 0);
+    let percent = 60;
+    let db = currentBufferDb(targetConfig, 60);
+    let safe = db <= 55;
+
+    for (let step = 0; step <= 60; step += 5) {
+      const candidateDb = currentBufferDb(targetConfig, step);
+      if (candidateDb <= 55) {
+        percent = step;
+        db = candidateDb;
+        safe = true;
+        break;
+      }
+    }
+
+    return {
+      percent: percent,
+      db: db,
+      safe: safe,
+      reduction: Number((baselineDb - db).toFixed(1))
+    };
+  }
+
+  function updateRecommendationCard() {
+    if (!state.sampleData) return;
+    const current40 = currentBufferDb(bufferConfigs.find(function(config) {
+      return config.distance === 40;
+    }));
+    const recommendation = recommendedVegetation();
+    const value = document.getElementById("recommendValue");
+    const text = document.getElementById("recommendText");
+    const badge = document.getElementById("recommendBadge");
+    const reductionText = recommendation.reduction.toFixed(1).replace(".0", "") + " dBA";
+
+    if (current40 <= 55) {
+      value.textContent = "Vegetasi " + state.vegetationPercent + "%";
+      text.textContent = "Skenario aktif sudah menekan zona 40 meter menjadi " + formatDb(current40) + ". Warna zona ikut bergeser ke kelas yang lebih aman untuk permukiman Ketintang.";
+      badge.textContent = "Target aman tercapai";
+      badge.style.background = "rgba(34,197,94,0.16)";
+      badge.style.color = "#166534";
+      return;
+    }
+
+    if (recommendation.safe) {
+      value.textContent = "Vegetasi " + recommendation.percent + "%";
+      text.textContent = "Untuk menurunkan zona 40 meter dari " + formatDb(current40) + " menuju " + formatDb(recommendation.db) + ", dibutuhkan vegetasi sekitar " + recommendation.percent + "%. Penurunan dari kondisi dasar diproyeksikan sekitar " + reductionText + ".";
+      badge.textContent = "Rekomendasi siap diterapkan";
+      badge.style.background = "rgba(103,232,249,0.18)";
+      badge.style.color = "#0f766e";
+      return;
+    }
+
+    value.textContent = "Vegetasi > 60%";
+    text.textContent = "Pada skenario dummy ini, vegetasi 60% baru menurunkan zona 40 meter ke " + formatDb(recommendation.db) + ". Masih dibutuhkan mitigasi tambahan seperti barrier akustik atau pengaturan setback permukiman.";
+    badge.textContent = "Butuh mitigasi tambahan";
+    badge.style.background = "rgba(249,115,22,0.16)";
+    badge.style.color = "#9a3412";
+  }
+
+  function renderChart() {
+    const baselineValues = baselineChartValues();
+    const values = chartValues();
+    if (!state.noiseChart) {
+      state.noiseChart = new Chart(document.getElementById("noiseChart"), {
+        type: "line",
+        data: {
+          labels: ["10 m", "20 m", "40 m"],
+          datasets: [
+            {
+              label: "Kondisi Dasar",
+              data: baselineValues,
+              borderColor: "rgba(244,114,182,.9)",
+              backgroundColor: "rgba(244,114,182,.08)",
+              borderDash: [7, 5],
+              fill: false,
+              tension: 0.28,
+              pointRadius: 4,
+              pointHoverRadius: 5
+            },
+            {
+              label: "Kondisi Aktif",
+              data: values,
+              borderColor: "#67e8f9",
+              backgroundColor: "rgba(103,232,249,0.18)",
+              fill: true,
+              tension: 0.35,
+              pointRadius: 5,
+              pointHoverRadius: 6
+            },
+            {
+              label: "Batas Aman 55 dBA",
+              data: [55, 55, 55],
+              borderColor: "#86efac",
+              borderDash: [6, 6],
+              pointRadius: 0,
+              fill: false,
+              tension: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: "rgba(248,250,252,0.82)",
+                font: {
+                  family: "Sora"
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ": " + context.parsed.y + " dBA";
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                color: "rgba(248,250,252,0.74)"
+              },
+              grid: {
+                color: "rgba(255,255,255,0.08)"
+              }
+            },
+            y: {
+              suggestedMin: 45,
+              suggestedMax: 90,
+              ticks: {
+                color: "rgba(248,250,252,0.74)",
+                callback: function(value) {
+                  return value + " dBA";
+                }
+              },
+              grid: {
+                color: "rgba(255,255,255,0.08)"
+              }
+            }
+          }
+        }
+      });
+      return;
+    }
+
+    state.noiseChart.data.datasets[0].data = baselineValues;
+    state.noiseChart.data.datasets[1].data = values;
+    state.noiseChart.update();
+  }
+
+  function renderImpactChart() {
+    const baselineValues = baselineChartValues();
+    const values = chartValues();
+
+    if (!state.impactChart) {
+      state.impactChart = new Chart(document.getElementById("impactChart"), {
+        type: "bar",
+        data: {
+          labels: ["10 m", "20 m", "40 m"],
+          datasets: [
+            {
+              label: "Sebelum vegetasi",
+              data: baselineValues,
+              backgroundColor: "rgba(248,113,113,0.72)",
+              borderRadius: 10
+            },
+            {
+              label: "Sesudah vegetasi",
+              data: values,
+              backgroundColor: "rgba(34,197,94,0.72)",
+              borderRadius: 10
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: "rgba(248,250,252,0.82)",
+                font: {
+                  family: "Sora"
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ": " + context.parsed.y + " dBA";
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                color: "rgba(248,250,252,0.74)"
+              },
+              grid: {
+                display: false
+              }
+            },
+            y: {
+              suggestedMin: 45,
+              suggestedMax: 90,
+              ticks: {
+                color: "rgba(248,250,252,0.74)",
+                callback: function(value) {
+                  return value + " dBA";
+                }
+              },
+              grid: {
+                color: "rgba(255,255,255,0.08)"
+              }
+            }
+          }
+        }
+      });
+      return;
+    }
+
+    state.impactChart.data.datasets[0].data = baselineValues;
+    state.impactChart.data.datasets[1].data = values;
+    state.impactChart.update();
+  }
+
+  function updateComparisonCard() {
+    if (!state.sampleData) return;
+    const values = chartValues();
+    const unsafeCount = values.filter(function(value) {
+      return value > 55;
+    }).length;
+    const difference = Number((values[0] - values[2]).toFixed(1));
+    const comparisonEffect = Number((baselineChartValues()[2] - values[2]).toFixed(1));
+
+    document.getElementById("comparisonPeak").textContent = formatDb(values[0]);
+    document.getElementById("comparisonPeakMeta").textContent = "Paparan terkuat tetap berada di zona 10 meter dari rel.";
+    document.getElementById("comparisonDrop").textContent = difference.toFixed(1).replace(".0", "") + " dBA";
+    document.getElementById("comparisonDropMeta").textContent = "Penurunan paparan dari 10 meter ke 40 meter.";
+    document.getElementById("comparisonRisk").textContent = unsafeCount + "/3 zona";
+    document.getElementById("comparisonRiskMeta").textContent = unsafeCount === 0
+      ? "Seluruh buffer sudah berada di bawah 55 dBA."
+      : unsafeCount + " buffer masih berada di atas ambang aman.";
+
+    document.getElementById("comparisonNarrative").textContent = state.vegetationPercent === 0
+      ? "Pada kondisi dasar, kurva memperlihatkan pelemahan kebisingan seiring bertambahnya jarak dari rel, tetapi beberapa buffer masih melampaui 55 dBA."
+      : "Dengan vegetasi " + state.vegetationPercent + "%, zona 40 meter turun sekitar " + comparisonEffect.toFixed(1).replace(".0", "") + " dBA dari kondisi dasar dan pola gradien kebisingan menjadi lebih landai.";
+  }
+
+  function updateImpactList() {
+    [10, 20, 40].forEach(function(distance) {
+      const config = bufferConfigs.find(function(item) {
+        return item.distance === distance;
+      });
+      const before = currentBufferDb(config, 0);
+      const after = currentBufferDb(config);
+      document.getElementById("impact" + distance).textContent = formatDb(before) + " -> " + formatDb(after);
+    });
+  }
+
+  function updateModeDetails(mode) {
+    const config = {
+      interactive: {
+        title: "Peta Interaktif",
+        lead: 'Klik kiri pada area Ketintang untuk membaca nilai kebisingan hasil interpolasi. Buffer 10 m, 20 m, dan 40 m tetap mengikuti <code>jrelka.geojson</code>.',
+        description: "Mode ini fokus pada pembacaan titik hasil interpolasi dan zona buffer 10 m, 20 m, serta 40 m di sekitar jalur rel Ketintang."
+      },
+      comparison: {
+        title: "Perbandingan",
+        lead: "Mode ini menonjolkan hubungan antara jarak dari rel dan tingkat kebisingan, lengkap dengan pembacaan perbedaan antara kondisi dasar dan kondisi aktif.",
+        description: "Isi mode ini didominasi grafik dan ringkasan analitis untuk membaca pola penurunan dBA dari zona terdekat ke zona yang lebih jauh."
+      },
+      mitigation: {
+        title: "Rekomendasi Mitigasi",
+        lead: "Mode mitigasi berisi simulasi vegetasi, perubahan warna buffer, rekomendasi penurunan dBA, dan perbandingan sebelum-sesudah mitigasi.",
+        description: "Gunakan mode ini untuk menguji seberapa jauh vegetasi dapat mengurangi paparan kebisingan di sekitar rel pada kawasan permukiman Ketintang."
+      }
+    }[mode];
+
+    document.getElementById("modeTitle").textContent = config.title;
+    document.getElementById("leadText").innerHTML = config.lead;
+    document.getElementById("modeDescription").textContent = config.description;
+  }
+
+  function updateModeSections(mode) {
+    document.querySelectorAll(".mode-section").forEach(function(section) {
+      const modes = (section.dataset.modes || "").split(" ").filter(Boolean);
+      const visible = modes.indexOf(mode) !== -1;
+      section.classList.toggle("visible", visible);
+    });
+  }
+
+  function updateActive(db, text) {
+    const cls = noiseClass(db);
+    document.getElementById("activeDb").textContent = formatDb(db);
+    document.getElementById("activeMeta").textContent = text;
+    const badge = document.getElementById("activeBadge");
+    badge.textContent = cls.label + " | " + cls.safety;
+    badge.style.background = cls.badge;
+    badge.style.color = cls.text;
+  }
+
+  function updateBufferCards() {
+    bufferConfigs.forEach(function(config) {
+      const db = currentBufferDb(config);
+      const cls = noiseClass(db);
+      document.getElementById("buffer" + config.distance + "Value").textContent = formatDb(db);
+      document.getElementById("buffer" + config.distance + "Label").textContent = cls.label + " | " + cls.safety;
+      document.getElementById("buffer" + config.distance + "Swatch").style.background = cls.color;
+    });
+  }
+
+  function renderSamples() {
+    state.sampleLayer.clearLayers();
+    state.haloLayer.clearLayers();
+
+    state.sampleData.features.forEach(function(feature) {
+      const sample = currentSample(feature);
+      const cls = noiseClass(sample.current);
+      const latlng = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+      const haloRadius = 22 + Math.max(sample.current - 55, 0) * 1.9;
+      const markerRadius = 5 + Math.max(sample.current - 55, 0) / 8;
+
+      L.circle(latlng, {
+        pane: "halos",
+        radius: haloRadius,
+        color: cls.color,
+        fillColor: cls.color,
+        fillOpacity: 0.07,
+        opacity: 0.18,
+        weight: 1,
+        interactive: false
+      }).addTo(state.haloLayer);
+
+      const marker = L.circleMarker(latlng, {
+        pane: "samples",
+        radius: markerRadius,
+        color: "#ffffff",
+        weight: 1.6,
+        fillColor: cls.color,
+        fillOpacity: 0.96,
+        bubblingMouseEvents: false
+      }).addTo(state.sampleLayer);
+
+      marker.bindPopup(
+        '<span class="popup-title">' + feature.properties.nama + '</span>' +
+        '<div>Baseline: <strong>' + formatDb(sample.baseline) + '</strong></div>' +
+        '<div>Kondisi aktif: <strong>' + formatDb(sample.current) + '</strong></div>' +
+        '<div>Vegetasi: <strong>' + state.vegetationPercent + '%</strong></div>' +
+        '<div class="badge" style="background:' + cls.badge + ';color:' + cls.text + ';padding:6px 10px;">' + cls.label + " | " + cls.safety + '</div>'
+      );
+
+      marker.on("click", function() {
+        updateActive(sample.current, feature.properties.nama + " dipilih. Ini adalah nilai dummy sampel aktual setelah pengaruh vegetasi.");
+        setStatus("Titik sampel dipilih. Nilai berasal langsung dari kebisingan.geojson.");
+      });
+    });
+
+    document.getElementById("averageDb").textContent = formatDb(averageCurrentDb());
+  }
+
+  function bufferStyle(config) {
+    const cls = noiseClass(currentBufferDb(config));
+    return {
+      color: cls.color,
+      fillColor: cls.color,
+      weight: 1.5,
+      opacity: 0.94,
+      fillOpacity: config.fillOpacity
+    };
+  }
+
+  function updateBuffers() {
+    bufferConfigs.forEach(function(config) {
+      if (state.bufferLayers[config.distance]) {
+        state.bufferLayers[config.distance].setStyle(bufferStyle(config));
+      }
+    });
+    updateBufferCards();
+    renderChart();
+    renderImpactChart();
+  }
+
+  function interpolateAt(latlng) {
+    const clickPoint = turf.point([latlng.lng, latlng.lat]);
+    const samples = state.sampleData.features.map(function(feature) {
+      return {
+        feature: feature,
+        currentDb: currentSample(feature).current,
+        distanceKm: Math.max(turf.distance(clickPoint, feature, { units: "kilometers" }), 0.005)
+      };
+    }).sort(function(a, b) {
+      return a.distanceKm - b.distanceKm;
+    }).slice(0, 6);
+
+    let weightedSum = 0;
+    let totalWeight = 0;
+    samples.forEach(function(sample) {
+      const weight = 1 / Math.pow(sample.distanceKm, 2);
+      weightedSum += sample.currentDb * weight;
+      totalWeight += weight;
+    });
+
+    const snapped = turf.nearestPointOnLine(state.railSource, clickPoint, { units: "kilometers" });
+    const distKm = typeof snapped.properties.dist === "number"
+      ? snapped.properties.dist
+      : turf.distance(clickPoint, snapped, { units: "kilometers" });
+    const distM = Math.round(distKm * 1000);
+    const attenuation = Math.min(distM * 0.18, 30);
+    const db = Number(Math.max((weightedSum / totalWeight) - attenuation, 42).toFixed(1));
+
+    return {
+      db: db,
+      distM: distM,
+      attenuation: Number(attenuation.toFixed(1)),
+      nearestId: samples[0].feature.properties.id,
+      insideFocus: turf.booleanPointInPolygon(clickPoint, focusPolygon)
+    };
+  }
+
+  function showInterpolated(latlng) {
+    const result = interpolateAt(latlng);
+    const cls = noiseClass(result.db);
+    const areaText = result.insideFocus ? "di dalam fokus Ketintang" : "di luar inti Ketintang";
+    const html =
+      '<span class="popup-title">Nilai Interpolasi Titik</span>' +
+      '<div>Posisi klik: <strong>' + latlng.lat.toFixed(5) + ", " + latlng.lng.toFixed(5) + '</strong></div>' +
+      '<div>Nilai kebisingan: <strong>' + formatDb(result.db) + '</strong></div>' +
+      '<div>Status: <strong>' + cls.safety + '</strong></div>' +
+      '<div>Jarak ke rel: <strong>' + result.distM + ' m</strong></div>' +
+      '<div>Attenuasi jarak: <strong>-' + result.attenuation + ' dBA</strong></div>' +
+      '<div>Area klik: <strong>' + areaText + '</strong></div>' +
+      '<div>Referensi sampel: <strong>' + result.nearestId + '</strong></div>' +
+      '<div class="badge" style="background:' + cls.badge + ';color:' + cls.text + ';padding:6px 10px;">' + cls.label + " | " + cls.safety + '</div>';
+
+    if (!state.clickMarker) {
+      state.clickMarker = L.circleMarker(latlng, {
+        pane: "click",
+        radius: 8,
+        color: "#ffffff",
+        weight: 2,
+        fillColor: cls.color,
+        fillOpacity: 1
+      }).addTo(map);
+    } else {
+      state.clickMarker.setLatLng(latlng);
+      state.clickMarker.setStyle({ fillColor: cls.color });
+    }
+
+    state.clickMarker.bindPopup(html).openPopup();
+    updateActive(result.db, "Titik klik " + areaText + ", dengan jarak ke rel " + result.distM + " m dan referensi terdekat " + result.nearestId + ".");
+    setStatus("Klik kiri terbaca. Nilai dBA hasil interpolasi berhasil ditampilkan.");
+  }
+
+  function refreshUi() {
+    document.getElementById("vegetationValue").textContent = state.vegetationPercent + "%";
+    document.getElementById("reductionHint").textContent = state.vegetationPercent === 0
+      ? "Vegetasi 0% berarti kondisi dasar. Saat persentase dinaikkan, titik sampel, hasil klik, dan warna buffer akan ikut menyesuaikan."
+      : "Vegetasi " + state.vegetationPercent + "% aktif. dBA pada sampel, buffer, dan hasil klik telah dikurangi sesuai skenario dummy.";
+
+    if (state.sampleData) {
+      renderSamples();
+      updateBuffers();
+      updateRecommendationCard();
+      updateComparisonCard();
+      updateImpactList();
+    }
+
+    if (state.clickMarker) {
+      showInterpolated(state.clickMarker.getLatLng());
+    }
+  }
+
+  function activateMode(mode, options) {
+    const settings = options || {};
+    state.mode = mode;
+    setModeButtons(mode);
+    setFloatingCopy(mode);
+    updateModeDetails(mode);
+    updateModeSections(mode);
+
+    if (mode === "comparison") {
+      setActiveCard("chartCard");
+    } else if (mode === "mitigation") {
+      setActiveCard("recommendationCard");
+    } else {
+      setActiveCard("resultCard");
+    }
+
+    if (!state.dataReady) {
+      setStatus("Mode " + mode + " dipilih. Data peta masih dimuat.");
+      return;
+    }
+
+    if (mode === "mitigation" && settings.applyRecommendation) {
+      const recommendation = recommendedVegetation();
+      state.vegetationPercent = recommendation.percent;
+      document.getElementById("vegetationRange").value = recommendation.percent;
+      refreshUi();
+      setStatus(recommendation.safe
+        ? "Mode mitigasi aktif. Vegetasi rekomendasi diterapkan untuk menurunkan paparan kebisingan di Ketintang."
+        : "Mode mitigasi aktif. Vegetasi maksimum 60% belum cukup, sehingga diperlukan kombinasi mitigasi tambahan.");
+    } else if (mode === "comparison") {
+      setStatus("Mode perbandingan aktif. Grafik hubungan jarak terhadap rel dan warna buffer sedang ditonjolkan.");
+    } else if (mode === "mitigation") {
+      setStatus("Mode mitigasi aktif. Geser persentase vegetasi untuk melihat perubahan dBA dan warna buffer.");
+    } else {
+      setStatus("Mode interaktif aktif. Klik kiri pada area Ketintang untuk membaca nilai dBA hasil interpolasi.");
+    }
+
+    focusMap(settings.animateFocus !== false);
+  }
+
+  Promise.all([
+    fetch("jrelka.geojson").then(function(response) {
+      if (!response.ok) throw new Error("Gagal memuat jrelka.geojson");
+      return response.json();
+    }),
+    fetch("kebisingan.geojson").then(function(response) {
+      if (!response.ok) throw new Error("Gagal memuat kebisingan.geojson");
+      return response.json();
+    })
+  ]).then(function(results) {
+    const railData = results[0];
+    state.sampleData = results[1];
+    state.railSource = turf.combine(railData).features[0];
+
+    const railLayer = L.geoJSON(railData, {
+      pane: "rail",
+      style: function() {
+        return { color: "#0f2744", weight: 4.5, opacity: 0.98 };
+      }
+    }).addTo(map);
+
+    bufferConfigs.forEach(function(config) {
+      const buffered = turf.buffer(state.railSource, config.distance, { units: "meters" });
+      state.bufferLayers[config.distance] = L.geoJSON(buffered, {
+        pane: config.pane,
+        interactive: false,
+        style: function() {
+          return bufferStyle(config);
+        }
+      }).addTo(map);
+    });
+
+    document.getElementById("sampleCount").textContent = state.sampleData.features.length + " titik";
+    state.dataReady = true;
+    refreshUi();
+
+    L.control.layers({
+      "Carto Voyager": carto,
+      "OpenStreetMap": osm
+    }, {
+      "Jalur Kereta": railLayer,
+      "Buffer 10 m": state.bufferLayers[10],
+      "Buffer 20 m": state.bufferLayers[20],
+      "Buffer 40 m": state.bufferLayers[40],
+      "Halo Kebisingan": state.haloLayer,
+      "Titik Sampel": state.sampleLayer,
+      "Batas Fokus": focusLayer
+    }, {
+      collapsed: true,
+      position: "bottomleft"
+    }).addTo(map);
+
+    focusMap(false);
+    activateMode(state.mode, {
+      applyRecommendation: state.mode === "mitigation",
+      animateFocus: false
+    });
+  }).catch(function(error) {
+    console.error(error);
+    setStatus("Gagal memuat data peta.");
+    map.setView([-7.3161, 112.7269], 15);
+  });
+
+  map.on("click", function(event) {
+    if (!state.sampleData || !state.railSource) return;
+    showInterpolated(event.latlng);
+  });
+
+  document.getElementById("vegetationRange").addEventListener("input", function(event) {
+    state.vegetationPercent = Number(event.target.value);
+    refreshUi();
+  });
+
+  document.querySelectorAll(".mode-btn").forEach(function(button) {
+    button.addEventListener("click", function() {
+      activateMode(button.dataset.mode, {
+        applyRecommendation: button.dataset.mode === "mitigation" && state.vegetationPercent === 0
+      });
+    });
+  });
+
+  document.getElementById("openHub").addEventListener("click", function() {
+    showHubScreen();
+  });
+
+  document.getElementById("openInteractive").addEventListener("click", function() {
+    enterMode("interactive");
+  });
+
+  document.getElementById("backToIntro").addEventListener("click", function() {
+    showIntroScreen();
+  });
+
+  document.getElementById("backToHub").addEventListener("click", function() {
+    showHubScreen();
+  });
+
+  document.querySelectorAll(".hub-mode").forEach(function(button) {
+    button.addEventListener("click", function() {
+      enterMode(button.dataset.mode);
+    });
+  });
+
+  document.getElementById("floatingHide").addEventListener("click", function() {
+    toggleFloatingPanel(false);
+  });
+
+  document.getElementById("floatingPeek").addEventListener("click", function() {
+    toggleFloatingPanel(true);
+  });
+</script>
+</body>
+</html>
