@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suara Rel Ketintang | WebGIS Kebisingan Publik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="backdrop" aria-hidden="true">
+    <div class="backdrop-glow glow-one"></div>
+    <div class="backdrop-glow glow-two"></div>
+    <div class="backdrop-grid"></div>
+  </div>
+
+  <div class="status-banner" id="statusBanner" role="status" aria-live="polite"></div>
+
+  <header class="site-header" id="siteHeader">
+    <a class="brand" href="#beranda">
+      <span class="brand-mark"></span>
+      <span class="brand-copy">
+        <strong>Suara Rel Ketintang</strong>
+        <small>WebGIS Kebisingan Publik</small>
+      </span>
+    </a>
+
+    <nav class="site-nav" aria-label="Navigasi utama">
+      <a href="#ringkasan">Ringkasan</a>
+      <a href="#peta-publik">Peta</a>
+      <a href="#simulasi">Simulasi</a>
+      <a href="#metode">Metode</a>
+    </nav>
+
+    <a class="header-cta" href="#peta-publik">Lihat Peta</a>
+  </header>
+
+  <main>
+    <section class="hero section" id="beranda">
+      <div class="hero-copy reveal">
+        <p class="eyebrow">Kelurahan Ketintang, Surabaya</p>
+        <h1>Membaca kebisingan rel dengan cara yang lebih jelas, lebih hangat, dan lebih mudah dipahami masyarakat.</h1>
+        <p class="hero-text">
+          Halaman ini merangkum data kebisingan, koridor rel, dan simulasi vegetasi dalam satu pengalaman WebGIS
+          yang ringan. Tujuannya sederhana: membantu warga, mahasiswa, dan pengambil keputusan melihat area yang
+          paling terpapar dan memahami langkah mitigasi yang realistis.
+        </p>
+
+        <div class="hero-actions">
+          <a class="button primary" href="#peta-publik">Jelajahi Peta</a>
+          <button class="button secondary" id="audioToggle" type="button">Dengar Suasana Rel</button>
+        </div>
+
+        <div class="note-row">
+          <span class="note-pill" id="heroSampleCount">Memuat titik sampel</span>
+          <span class="note-pill">Ambang rujukan 55 dBA</span>
+          <span class="note-pill">Simulator vegetasi aktif</span>
+        </div>
+      </div>
+
+      <div class="hero-visual reveal">
+        <article class="hero-panel">
+          <span class="panel-label">Sorotan cepat</span>
+          <div class="hero-stat-list">
+            <div class="hero-stat">
+              <small>Rata-rata paparan</small>
+              <strong id="heroAverage">Memuat...</strong>
+            </div>
+            <div class="hero-stat">
+              <small>Titik tertinggi</small>
+              <strong id="heroPeak">Memuat...</strong>
+            </div>
+            <div class="hero-stat">
+              <small>Zona prioritas</small>
+              <strong id="heroPriority">Memuat...</strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="hero-panel tone-sand">
+          <span class="panel-label">Cara membaca halaman ini</span>
+          <div class="step-list">
+            <div class="step-item">
+              <span>01</span>
+              <p>Lihat warna titik pada peta untuk membaca tingkat paparan kebisingan.</p>
+            </div>
+            <div class="step-item">
+              <span>02</span>
+              <p>Klik area peta untuk melihat sampel terdekat dan jaraknya dari rel.</p>
+            </div>
+            <div class="step-item">
+              <span>03</span>
+              <p>Geser simulator vegetasi untuk membandingkan perubahan kebisingan per zona.</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="ringkasan">
+      <div class="section-head reveal">
+        <p class="eyebrow">Ringkasan Publik</p>
+        <h2>Apa yang paling penting untuk dipahami warga?</h2>
+        <p>
+          Visual ini tidak berhenti di angka. Setiap kartu di bawah mencoba menerjemahkan data menjadi pesan yang
+          lebih manusiawi: mana area yang perlu perhatian, apa arti warnanya, dan seberapa jauh vegetasi bisa membantu.
+        </p>
+      </div>
+
+      <div class="card-grid three">
+        <article class="info-card reveal">
+          <span class="panel-label">Cakupan data</span>
+          <strong id="summaryCoverage">Memuat...</strong>
+          <p>Data lapangan dibaca dari titik kebisingan dan koridor rel di Kelurahan Ketintang.</p>
+        </article>
+
+        <article class="info-card reveal">
+          <span class="panel-label">Titik yang perlu perhatian</span>
+          <strong id="summaryRisk">Memuat...</strong>
+          <p>Area dengan nilai di atas 70 dBA diperlakukan sebagai paparan tinggi yang perlu kewaspadaan lebih.</p>
+        </article>
+
+        <article class="info-card reveal">
+          <span class="panel-label">Aksi yang realistis</span>
+          <strong id="summaryAction">Memuat...</strong>
+          <p>Vegetasi membantu sebagai peredam tambahan, tetapi koridor dekat rel sering tetap memerlukan strategi gabungan.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="peta-publik">
+      <div class="section-head reveal">
+        <p class="eyebrow">Peta Utama</p>
+        <h2>Eksplorasi koridor rel dan titik kebisingan secara langsung</h2>
+        <p>
+          Buffer 10 meter, 20 meter, dan 40 meter ditampilkan untuk membantu publik melihat perubahan eksposur
+          dari tepi rel menuju lingkungan sekitarnya. Klik di peta untuk membaca titik terdekat.
+        </p>
+      </div>
+
+      <div class="map-layout">
+        <aside class="map-sidebar reveal">
+          <article class="sidebar-card">
+            <span class="panel-label">Legenda warna</span>
+            <div class="legend-list">
+              <div class="legend-item">
+                <span class="legend-swatch safe"></span>
+                <div>
+                  <strong>Aman</strong>
+                  <p>Di bawah 55 dBA</p>
+                </div>
+              </div>
+              <div class="legend-item">
+                <span class="legend-swatch warning"></span>
+                <div>
+                  <strong>Waspada</strong>
+                  <p>55 sampai 70 dBA</p>
+                </div>
+              </div>
+              <div class="legend-item">
+                <span class="legend-swatch danger"></span>
+                <div>
+                  <strong>Rentan tinggi</strong>
+                  <p>Di atas 70 dBA</p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="sidebar-card">
+            <span class="panel-label">Sorot buffer rel</span>
+            <div class="segmented" role="group" aria-label="Sorot zona buffer">
+              <button class="zone-button active" data-zone="all" type="button" aria-pressed="true">Semua</button>
+              <button class="zone-button" data-zone="10" type="button" aria-pressed="false">10 m</button>
+              <button class="zone-button" data-zone="20" type="button" aria-pressed="false">20 m</button>
+              <button class="zone-button" data-zone="40" type="button" aria-pressed="false">40 m</button>
+            </div>
+            <p class="zone-narrative" id="zoneNarrative">Memuat ringkasan zona...</p>
+            <div class="metric-grid compact">
+              <div class="metric-box">
+                <small>Rata-rata zona</small>
+                <strong id="zoneAverage">Memuat...</strong>
+              </div>
+              <div class="metric-box">
+                <small>Status</small>
+                <strong id="zoneStatus">Memuat...</strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="sidebar-card">
+            <span class="panel-label">Klik di peta</span>
+            <strong id="clickTitle">Belum ada titik dipilih</strong>
+            <p id="clickDescription">
+              Klik area di sekitar rel untuk membaca sampel terdekat, nilai dBA, dan jaraknya dari rel.
+            </p>
+            <div class="badge-row">
+              <span class="badge neutral" id="clickBadge">Menunggu interaksi</span>
+              <span class="badge soft" id="clickDistance">-</span>
+            </div>
+          </article>
+
+          <article class="sidebar-card">
+            <span class="panel-label">Makna untuk warga</span>
+            <p class="resident-copy" id="publicMessage">
+              Ringkasan publik akan muncul di sini setelah data selesai dimuat atau saat Anda memilih titik di peta.
+            </p>
+          </article>
+        </aside>
+
+        <div class="map-stage reveal">
+          <div class="map-frame">
+            <div class="map-overlay overlay-top-left">
+              <span class="panel-label">Koridor aktif</span>
+              <strong>Kelurahan Ketintang</strong>
+              <p id="mapLiveLabel">Memuat data lapangan...</p>
+            </div>
+            <div class="map-overlay overlay-bottom-left">
+              <span>Tip cepat</span>
+              <p>Titik menunjukkan sampel kebisingan. Area berwarna menandai buffer jarak dari rel.</p>
+            </div>
+            <div id="map" aria-label="Peta kebisingan rel Kelurahan Ketintang"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="temuan">
+      <div class="section-head reveal">
+        <p class="eyebrow">Temuan Utama</p>
+        <h2>Pola kebisingan yang bisa dibaca tanpa harus menjadi ahli</h2>
+        <p>
+          Grafik di bawah ini merangkum paparan rata-rata per zona. Nilainya bersifat indikatif, dibangun dari
+          rata-rata titik sampel lalu diterjemahkan ke tiga jarak buffer agar lebih mudah dibaca publik.
+        </p>
+      </div>
+
+      <div class="insight-grid">
+        <article class="insight-card reveal">
+          <div class="card-head">
+            <span class="panel-label">Perubahan menurut jarak</span>
+            <h3>Rata-rata paparan per buffer rel</h3>
+          </div>
+          <div class="chart-holder">
+            <canvas id="bufferChart"></canvas>
+          </div>
+        </article>
+
+        <div class="fact-stack">
+          <article class="fact-card reveal">
+            <span class="panel-label">Titik tertinggi</span>
+            <strong id="peakPoint">Memuat...</strong>
+            <p id="peakNarrative">Ringkasan titik tertinggi akan tampil setelah data aktif.</p>
+          </article>
+
+          <article class="fact-card reveal">
+            <span class="panel-label">Penurunan antar jarak</span>
+            <strong id="dropValue">Memuat...</strong>
+            <p id="dropNarrative">Perbedaan antara zona paling dekat dan paling jauh akan dibaca otomatis.</p>
+          </article>
+
+          <article class="fact-card reveal">
+            <span class="panel-label">Zona prioritas</span>
+            <strong id="priorityValue">Memuat...</strong>
+            <p id="priorityNarrative">Area yang paling butuh perhatian akan diringkas di sini.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="simulasi">
+      <div class="sim-layout">
+        <article class="sim-card reveal">
+          <div class="card-head">
+            <p class="eyebrow">Simulator Vegetasi</p>
+            <h2>Seberapa jauh ruang hijau bisa membantu menurunkan kebisingan?</h2>
+          </div>
+
+          <p>
+            Gunakan slider di bawah untuk mensimulasikan kerapatan vegetasi di sekitar koridor rel. Simulasi ini
+            berguna untuk membaca arah penurunan kebisingan, bukan sebagai pengganti pengukuran lapangan rinci.
+          </p>
+
+          <div class="range-card">
+            <div class="range-head">
+              <span>Kerapatan vegetasi</span>
+              <strong id="vegetationValue">0%</strong>
+            </div>
+            <input id="vegetationRange" type="range" min="0" max="100" step="5" value="0">
+            <p class="range-note" id="reductionHint">Geser slider untuk melihat potensi penurunan dBA per zona.</p>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric-box">
+              <small>Reduksi estimasi</small>
+              <strong id="simReduction">0.0 dBA</strong>
+            </div>
+            <div class="metric-box">
+              <small>Zona di bawah 55 dBA</small>
+              <strong id="simSafeZone">0/3 zona</strong>
+            </div>
+            <div class="metric-box">
+              <small>Prioritas setelah simulasi</small>
+              <strong id="simPriorityZone">Memuat...</strong>
+            </div>
+          </div>
+
+          <div class="recommendation-box">
+            <span class="panel-label">Rekomendasi cepat</span>
+            <strong id="recommendationTitle">Menunggu simulasi</strong>
+            <p id="recommendationText">
+              Sistem akan menghitung apakah vegetasi saja cukup untuk membantu zona terluar mendekati ambang aman.
+            </p>
+            <span class="badge accent" id="recommendationBadge">Belum dihitung</span>
+          </div>
+        </article>
+
+        <div class="sim-visual">
+          <article class="insight-card reveal">
+            <div class="card-head">
+              <span class="panel-label">Perbandingan dampak</span>
+              <h3>Sebelum dan sesudah vegetasi</h3>
+            </div>
+            <div class="chart-holder small">
+              <canvas id="mitigationChart"></canvas>
+            </div>
+          </article>
+
+          <article class="formula-card reveal">
+            <span class="panel-label">Dasar estimasi</span>
+            <p>
+              Rumus indikatif yang dipakai adalah <strong>Delta L = 5.8 x (1 - e^-0.028 x K)</strong>, dengan
+              <strong>K</strong> sebagai kerapatan vegetasi dalam persen.
+            </p>
+            <div class="impact-grid">
+              <div>
+                <small>Zona 10 m</small>
+                <strong id="impact10">Memuat...</strong>
+              </div>
+              <div>
+                <small>Zona 20 m</small>
+                <strong id="impact20">Memuat...</strong>
+              </div>
+              <div>
+                <small>Zona 40 m</small>
+                <strong id="impact40">Memuat...</strong>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="metode">
+      <div class="section-head reveal">
+        <p class="eyebrow">Metode dan Catatan</p>
+        <h2>Supaya publik tahu apa yang sedang dilihat</h2>
+        <p>
+          Transparansi penting untuk halaman masyarakat. Karena itu, sumber data, cara baca, dan batas interpretasi
+          ditampilkan secara terbuka di bawah ini.
+        </p>
+      </div>
+
+      <div class="card-grid three">
+        <article class="info-card reveal">
+          <span class="panel-label">Sumber data</span>
+          <strong>KOORD.csv dan jrelka.geojson</strong>
+          <p>Data titik kebisingan dibaca dari <code>KOORD.csv</code>, sedangkan geometri jalur rel dibaca dari <code>jrelka.geojson</code>.</p>
+        </article>
+
+        <article class="info-card reveal">
+          <span class="panel-label">Cara interpretasi</span>
+          <strong>Peta aktual, zona indikatif</strong>
+          <p>Titik dan rel adalah data spasial aktual. Nilai rata-rata per zona merupakan ringkasan indikatif agar pola jarak lebih mudah dipahami publik.</p>
+        </article>
+
+        <article class="info-card reveal">
+          <span class="panel-label">Makna mitigasi</span>
+          <strong>Vegetasi bukan satu-satunya jawaban</strong>
+          <p>Jika zona dekat rel tetap tinggi, solusi tambahan seperti setback, barrier, atau perlindungan bangunan tetap perlu dipertimbangkan.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Suara Rel Ketintang dibuat untuk komunikasi publik berbasis data.</p>
+    <p>&copy; <span id="year"></span> WebGIS Ketintang.</p>
+  </footer>
+
+  <noscript>
+    <div class="status-banner is-visible">Halaman ini membutuhkan JavaScript agar peta dan simulasi bisa berjalan.</div>
+  </noscript>
+
+<script>
+  const ZONE_MODEL = [
+    { distance: 40, offset: -29, fillOpacity: 0.08, label: "40 meter", context: "Zona terluar mulai menjauh dari rel dan biasanya menjadi area pertama yang bisa didorong mendekati ambang aman." },
+    { distance: 20, offset: -16, fillOpacity: 0.14, label: "20 meter", context: "Zona transisi masih perlu perhatian karena paparan biasanya belum turun cukup jauh." },
+    { distance: 10, offset: 0, fillOpacity: 0.22, label: "10 meter", context: "Zona inti paling dekat ke rel dan hampir selalu menjadi area dengan tekanan kebisingan tertinggi." }
+  ];
+
+  const MITIGATION_MODEL = {
+    maxReduction: 5.8,
+    densityDecay: 0.028
+  };
+
+  const dom = {
+    statusBanner: document.getElementById("statusBanner"),
+    header: document.getElementById("siteHeader"),
+    audioToggle: document.getElementById("audioToggle"),
+    heroSampleCount: document.getElementById("heroSampleCount"),
+    heroAverage: document.getElementById("heroAverage"),
+    heroPeak: document.getElementById("heroPeak"),
+    heroPriority: document.getElementById("heroPriority"),
+    summaryCoverage: document.getElementById("summaryCoverage"),
+    summaryRisk: document.getElementById("summaryRisk"),
+    summaryAction: document.getElementById("summaryAction"),
+    zoneNarrative: document.getElementById("zoneNarrative"),
+    zoneAverage: document.getElementById("zoneAverage"),
+    zoneStatus: document.getElementById("zoneStatus"),
+    clickTitle: document.getElementById("clickTitle"),
+    clickDescription: document.getElementById("clickDescription"),
+    clickBadge: document.getElementById("clickBadge"),
+    clickDistance: document.getElementById("clickDistance"),
+    publicMessage: document.getElementById("publicMessage"),
+    mapLiveLabel: document.getElementById("mapLiveLabel"),
+    peakPoint: document.getElementById("peakPoint"),
+    peakNarrative: document.getElementById("peakNarrative"),
+    dropValue: document.getElementById("dropValue"),
+    dropNarrative: document.getElementById("dropNarrative"),
+    priorityValue: document.getElementById("priorityValue"),
+    priorityNarrative: document.getElementById("priorityNarrative"),
+    vegetationRange: document.getElementById("vegetationRange"),
+    vegetationValue: document.getElementById("vegetationValue"),
+    reductionHint: document.getElementById("reductionHint"),
+    simReduction: document.getElementById("simReduction"),
+    simSafeZone: document.getElementById("simSafeZone"),
+    simPriorityZone: document.getElementById("simPriorityZone"),
+    recommendationTitle: document.getElementById("recommendationTitle"),
+    recommendationText: document.getElementById("recommendationText"),
+    recommendationBadge: document.getElementById("recommendationBadge"),
+    impact10: document.getElementById("impact10"),
+    impact20: document.getElementById("impact20"),
+    impact40: document.getElementById("impact40"),
+    year: document.getElementById("year"),
+    zoneButtons: Array.from(document.querySelectorAll(".zone-button"))
+  };
+
+  const state = {
+    map: null,
+    audio: null,
+    railData: null,
+    combinedRail: null,
+    railLayer: null,
+    sampleLayer: null,
+    bufferLayers: {},
+    featureLayers: new Map(),
+    clickMarker: null,
+    samples: [],
+    zoneStats: [],
+    activeZone: "all",
+    vegetationPercent: 0,
+    bufferChart: null,
+    mitigationChart: null
+  };
+
+  function roundTo(value, digits) {
+    return Number(value.toFixed(digits || 1));
+  }
+
+  function formatDb(value) {
+    return roundTo(value, 1).toFixed(1) + " dBA";
+  }
+
+  function parseLocalizedNumber(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return NaN;
+
+    if (raw.includes(",") && raw.includes(".")) {
+      if (raw.lastIndexOf(",") > raw.lastIndexOf(".")) {
+        return Number(raw.replace(/\./g, "").replace(",", "."));
+      }
+      return Number(raw.replace(/,/g, ""));
+    }
+
+    if (raw.includes(",") && !raw.includes(".")) {
+      return Number(raw.replace(",", "."));
+    }
+
+    const dotParts = raw.split(".");
+    if (dotParts.length > 2) {
+      return Number(raw.replace(/\./g, ""));
+    }
+
+    return Number(raw);
+  }
+
+  function noiseClass(value) {
+    if (value > 70) {
+      return {
+        label: "Rentan tinggi",
+        color: "#c96a3d",
+        badgeClass: "danger",
+        resident: "Paparan masih tinggi dan perlu perhatian lebih serius."
+      };
+    }
+
+    if (value >= 55) {
+      return {
+        label: "Waspada",
+        color: "#d7a645",
+        badgeClass: "warning",
+        resident: "Paparan mulai turun, tetapi kewaspadaan tetap dibutuhkan."
+      };
+    }
+
+    return {
+      label: "Aman",
+      color: "#4d8b68",
+      badgeClass: "safe",
+      resident: "Paparan relatif lebih nyaman dibanding koridor terdekat rel."
+    };
+  }
+
+  function showStatus(message, type) {
+    dom.statusBanner.textContent = message;
+    dom.statusBanner.className = "status-banner is-visible" + (type === "error" ? " is-error" : "");
+  }
+
+  function hideStatus() {
+    dom.statusBanner.className = "status-banner";
+    dom.statusBanner.textContent = "";
+  }
+
+  function buildResidentMessage(dbValue, distanceToRail) {
+    if (dbValue > 70 && distanceToRail <= 20) {
+      return "Lokasi ini berada di koridor paling sensitif. Vegetasi bisa membantu sedikit, tetapi hunian yang sangat dekat rel tetap lebih aman jika disertai barrier, setback, atau perlindungan bangunan.";
+    }
+
+    if (dbValue > 70) {
+      return "Paparan masih tergolong tinggi. Area seperti ini cocok diprioritaskan untuk kombinasi vegetasi, penataan ruang, dan perlindungan fasad bangunan.";
+    }
+
+    if (dbValue >= 55) {
+      return "Area ini berada pada zona waspada. Upaya penghijauan dan pengaturan ruang luar dapat membantu meningkatkan kenyamanan akustik.";
+    }
+
+    return "Area ini termasuk yang lebih nyaman dibanding koridor inti rel. Menjaga vegetasi dan jarak bangunan tetap penting agar kondisinya stabil.";
+  }
+
+  function getSampleStats(samples) {
+    const values = samples.map(function(sample) {
+      return sample.db;
+    });
+    const total = values.reduce(function(sum, value) {
+      return sum + value;
+    }, 0);
+
+    return {
+      count: samples.length,
+      average: total / samples.length,
+      min: Math.min.apply(null, values),
+      max: Math.max.apply(null, values)
+    };
+  }
+
+  function estimateZoneStats(baseAverage) {
+    return ZONE_MODEL.slice().sort(function(a, b) {
+      return a.distance - b.distance;
+    }).map(function(config) {
+      const estimatedDb = roundTo(Math.max(baseAverage + config.offset, 42), 1);
+      return {
+        distance: config.distance,
+        label: config.label,
+        fillOpacity: config.fillOpacity,
+        context: config.context,
+        estimatedDb: estimatedDb,
+        classInfo: noiseClass(estimatedDb)
+      };
+    });
+  }
+
+  function vegetationReduction(percent) {
+    return roundTo(MITIGATION_MODEL.maxReduction * (1 - Math.exp(-MITIGATION_MODEL.densityDecay * percent)), 1);
+  }
+
+  function mitigatedZoneValues(percent) {
+    const reduction = vegetationReduction(percent);
+    return state.zoneStats.map(function(zone) {
+      return {
+        distance: zone.distance,
+        baseline: zone.estimatedDb,
+        value: roundTo(Math.max(zone.estimatedDb - reduction, 42), 1)
+      };
+    });
+  }
+
+  function recommendedVegetation() {
+    const zone40 = state.zoneStats.find(function(zone) {
+      return zone.distance === 40;
+    });
+
+    if (!zone40) {
+      return { status: "unavailable" };
+    }
+
+    const neededReduction = roundTo(zone40.estimatedDb - 55, 1);
+
+    if (neededReduction <= 0) {
+      return {
+        status: "already-safe",
+        percent: 0,
+        resultDb: zone40.estimatedDb,
+        reduction: 0
+      };
+    }
+
+    for (let percent = 0; percent <= 100; percent += 5) {
+      const reducedDb = roundTo(Math.max(zone40.estimatedDb - vegetationReduction(percent), 42), 1);
+      if (reducedDb <= 55) {
+        return {
+          status: "reachable",
+          percent: percent,
+          resultDb: reducedDb,
+          reduction: roundTo(zone40.estimatedDb - reducedDb, 1)
+        };
+      }
+    }
+
+    const maxDb = roundTo(Math.max(zone40.estimatedDb - vegetationReduction(100), 42), 1);
+    return {
+      status: "not-enough",
+      percent: 100,
+      resultDb: maxDb,
+      reduction: roundTo(zone40.estimatedDb - maxDb, 1)
+    };
+  }
+
+  function fetchTextWithFallback(paths) {
+    const current = paths[0];
+    return fetch(current).then(function(response) {
+      if (!response.ok) {
+        throw new Error("Gagal memuat " + current);
+      }
+      return response.text();
+    }).catch(function(error) {
+      if (paths.length === 1) {
+        throw error;
+      }
+      return fetchTextWithFallback(paths.slice(1));
+    });
+  }
+
+  function parseCsvToSamples(text) {
+    const rows = text.trim().split(/\r?\n/).filter(Boolean);
+    if (rows.length < 2) {
+      throw new Error("KOORD.csv tidak berisi data yang cukup.");
+    }
+
+    const headers = rows[0].split(";").map(function(header) {
+      return header.trim().toLowerCase();
+    });
+
+    const idIndex = headers.findIndex(function(header) { return header === "id"; });
+    const latIndex = headers.findIndex(function(header) { return header.indexOf("latitude") !== -1; });
+    const lngIndex = headers.findIndex(function(header) { return header.indexOf("longitude") !== -1; });
+    const leqIndex = headers.findIndex(function(header) { return header.indexOf("leq") !== -1; });
+
+    if (latIndex === -1 || lngIndex === -1 || leqIndex === -1) {
+      throw new Error("Kolom latitude, longitude, atau LEQ tidak ditemukan di KOORD.csv.");
+    }
+
+    const samples = rows.slice(1).map(function(row, index) {
+      const cells = row.split(";");
+      const rawId = idIndex !== -1 ? cells[idIndex] : String(index + 1);
+      const latitude = parseLocalizedNumber(cells[latIndex]);
+      const longitude = parseLocalizedNumber(cells[lngIndex]);
+      const leq = parseLocalizedNumber(cells[leqIndex]);
+
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !Number.isFinite(leq)) {
+        return null;
+      }
+
+      const idLabel = "K" + String(parseInt(rawId, 10) || (index + 1)).padStart(2, "0");
+
+      return {
+        id: idLabel,
+        name: "Titik " + idLabel,
+        lat: latitude,
+        lng: longitude,
+        db: roundTo(leq, 1)
+      };
+    }).filter(Boolean);
+
+    if (!samples.length) {
+      throw new Error("Tidak ada titik valid yang bisa dibaca dari KOORD.csv.");
+    }
+
+    return samples;
+  }
+
+  function initMap() {
+    state.map = L.map("map", {
+      zoomControl: false,
+      minZoom: 14,
+      preferCanvas: true
+    });
+
+    state.map.createPane("bufferPane");
+    state.map.getPane("bufferPane").style.zIndex = 402;
+    state.map.createPane("railPane");
+    state.map.getPane("railPane").style.zIndex = 410;
+    state.map.createPane("markerPane");
+    state.map.getPane("markerPane").style.zIndex = 420;
+    state.map.createPane("highlightPane");
+    state.map.getPane("highlightPane").style.zIndex = 430;
+
+    L.control.zoom({ position: "bottomright" }).addTo(state.map);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(state.map);
+
+    state.map.setView([-7.3165, 112.7288], 15);
+  }
+
+  function createSamplePopup(sample) {
+    return [
+      '<div class="popup-card">',
+      "<strong>" + sample.name + "</strong>",
+      "<span>" + formatDb(sample.db) + "</span>",
+      "<small>Jarak ke rel sekitar " + Math.round(sample.distanceToRail) + " meter</small>",
+      "</div>"
+    ].join("");
+  }
+
+  function makeSampleFeature(sample) {
+    return {
+      type: "Feature",
+      properties: {
+        id: sample.id,
+        name: sample.name,
+        db: sample.db
+      },
+      geometry: {
+        type: "Point",
+        coordinates: [sample.lng, sample.lat]
+      }
+    };
+  }
+
+  function addRailLayer(railData) {
+    state.railLayer = L.geoJSON(railData, {
+      pane: "railPane",
+      interactive: false,
+      style: function() {
+        return {
+          color: "#143642",
+          weight: 4,
+          opacity: 0.95,
+          lineCap: "round"
+        };
+      }
+    }).addTo(state.map);
+  }
+
+  function addSampleLayer(samples) {
+    state.sampleLayer = L.geoJSON(turf.featureCollection(samples.map(makeSampleFeature)), {
+      pane: "markerPane",
+      pointToLayer: function(feature, latlng) {
+        const sample = samples.find(function(item) {
+          return item.id === feature.properties.id;
+        });
+        const classInfo = noiseClass(sample.db);
+        return L.circleMarker(latlng, {
+          radius: 8,
+          weight: 2,
+          color: "#fff9f0",
+          fillColor: classInfo.color,
+          fillOpacity: 0.95
+        });
+      },
+      onEachFeature: function(feature, layer) {
+        const sample = samples.find(function(item) {
+          return item.id === feature.properties.id;
+        });
+        state.featureLayers.set(sample.id, layer);
+        layer.bindPopup(createSamplePopup(sample));
+        layer.on("click", function() {
+          updateSelection(sample, L.latLng(sample.lat, sample.lng), false);
+        });
+      }
+    }).addTo(state.map);
+  }
+
+  function bufferStyle(zone, isActive) {
+    return {
+      pane: "bufferPane",
+      interactive: false,
+      color: zone.classInfo.color,
+      fillColor: zone.classInfo.color,
+      weight: isActive ? 2.2 : 1.2,
+      opacity: isActive ? 0.78 : 0.18,
+      fillOpacity: state.activeZone === "all" ? zone.fillOpacity : (isActive ? 0.26 : 0.03)
+    };
+  }
+
+  function addBufferLayers() {
+    ZONE_MODEL.forEach(function(config) {
+      const zone = state.zoneStats.find(function(item) {
+        return item.distance === config.distance;
+      });
+
+      const buffered = turf.buffer(state.combinedRail, config.distance / 1000, { units: "kilometers" });
+      const layer = L.geoJSON(buffered, bufferStyle(zone, true)).addTo(state.map);
+      state.bufferLayers[String(config.distance)] = layer;
+    });
+  }
+
+  function updateZoneButtons(activeZone) {
+    dom.zoneButtons.forEach(function(button) {
+      const isActive = button.dataset.zone === activeZone;
+      button.classList.toggle("active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+  }
+
+  function updateZoneSummary(zoneKey) {
+    if (!state.zoneStats.length) return;
+
+    if (zoneKey === "all") {
+      const highest = state.zoneStats[0];
+      dom.zoneNarrative.textContent = "Semua buffer aktif untuk memperlihatkan gradasi paparan dari rel menuju lingkungan sekitar. Zona paling dekat biasanya tetap menjadi area paling sensitif.";
+      dom.zoneAverage.textContent = formatDb(state.zoneStats[0].estimatedDb) + " ke " + formatDb(state.zoneStats[state.zoneStats.length - 1].estimatedDb);
+      dom.zoneStatus.textContent = highest.classInfo.label + " dominan";
+      dom.publicMessage.textContent = "Baca buffer berlapis ini sebagai panduan cepat: semakin dekat ke rel, biasanya paparan semakin tinggi dan strategi perlindungan perlu semakin kuat.";
+      return;
+    }
+
+    const zone = state.zoneStats.find(function(item) {
+      return String(item.distance) === zoneKey;
+    });
+
+    if (!zone) return;
+
+    dom.zoneNarrative.textContent = zone.context;
+    dom.zoneAverage.textContent = formatDb(zone.estimatedDb);
+    dom.zoneStatus.textContent = zone.classInfo.label;
+    dom.publicMessage.textContent = zone.classInfo.resident + " " + zone.context;
+  }
+
+  function applyZoneFocus(zoneKey) {
+    state.activeZone = zoneKey;
+    updateZoneButtons(zoneKey);
+
+    Object.keys(state.bufferLayers).forEach(function(key) {
+      const zone = state.zoneStats.find(function(item) {
+        return String(item.distance) === key;
+      });
+      const active = zoneKey === "all" || zoneKey === key;
+      state.bufferLayers[key].setStyle(bufferStyle(zone, active));
+    });
+
+    updateZoneSummary(zoneKey);
+  }
+
+  function updateSelection(sample, latlng, fromMapClick) {
+    const classInfo = noiseClass(sample.db);
+    const selectedLatLng = latlng || L.latLng(sample.lat, sample.lng);
+
+    dom.clickTitle.textContent = sample.name + " · " + formatDb(sample.db);
+    dom.clickDescription.textContent = fromMapClick
+      ? "Lokasi yang Anda pilih paling dekat dengan " + sample.name + ". Nilai dBA yang ditampilkan berasal dari sampel terdekat di koridor ini."
+      : sample.name + " adalah salah satu titik pengamatan aktif pada koridor rel Ketintang.";
+    dom.clickBadge.textContent = classInfo.label;
+    dom.clickBadge.className = "badge " + classInfo.badgeClass;
+    dom.clickDistance.textContent = Math.round(sample.distanceToRail) + " m dari rel";
+    dom.publicMessage.textContent = buildResidentMessage(sample.db, sample.distanceToRail);
+
+    if (!state.clickMarker) {
+      state.clickMarker = L.circleMarker(selectedLatLng, {
+        pane: "highlightPane",
+        radius: 12,
+        weight: 2,
+        color: "#143642",
+        fillColor: "#fff2d8",
+        fillOpacity: 0.95
+      }).addTo(state.map);
+    } else {
+      state.clickMarker.setLatLng(selectedLatLng);
+    }
+
+    const layer = state.featureLayers.get(sample.id);
+    if (layer) {
+      layer.openPopup();
+    }
+  }
+
+  function findNearestSample(latlng) {
+    const point = turf.point([latlng.lng, latlng.lat]);
+
+    let nearest = null;
+    let nearestDistance = Infinity;
+
+    state.samples.forEach(function(sample) {
+      const distance = turf.distance(point, turf.point([sample.lng, sample.lat]), { units: "kilometers" }) * 1000;
+      if (distance < nearestDistance) {
+        nearest = sample;
+        nearestDistance = distance;
+      }
+    });
+
+    return nearest;
+  }
+
+  function updateNarrativeBlocks(stats) {
+    const peakSample = state.samples.reduce(function(top, current) {
+      return current.db > top.db ? current : top;
+    });
+    const zone10 = state.zoneStats.find(function(zone) { return zone.distance === 10; });
+    const zone40 = state.zoneStats.find(function(zone) { return zone.distance === 40; });
+    const drop = roundTo(zone10.estimatedDb - zone40.estimatedDb, 1);
+    const highRiskCount = state.samples.filter(function(sample) {
+      return sample.db > 70;
+    }).length;
+    const recommendation = recommendedVegetation();
+
+    dom.heroSampleCount.textContent = stats.count + " titik sampel aktif";
+    dom.heroAverage.textContent = formatDb(stats.average);
+    dom.heroPeak.textContent = peakSample.name + " · " + formatDb(peakSample.db);
+    dom.heroPriority.textContent = "Koridor 10 meter dari rel";
+
+    dom.summaryCoverage.textContent = stats.count + " titik dan 3 zona buffer";
+    dom.summaryRisk.textContent = highRiskCount + " dari " + stats.count + " titik berada di atas 70 dBA";
+
+    if (recommendation.status === "reachable") {
+      dom.summaryAction.textContent = "Vegetasi sekitar " + recommendation.percent + "% mulai membantu zona 40 meter";
+    } else if (recommendation.status === "already-safe") {
+      dom.summaryAction.textContent = "Zona 40 meter sudah paling mendekati aman";
+    } else {
+      dom.summaryAction.textContent = "Vegetasi membantu, tetapi mitigasi gabungan tetap diperlukan";
+    }
+
+    dom.peakPoint.textContent = peakSample.name + " · " + formatDb(peakSample.db);
+    dom.peakNarrative.textContent = peakSample.name + " berada sekitar " + Math.round(peakSample.distanceToRail) + " meter dari rel, menunjukkan bahwa koridor inti tetap menjadi area dengan tekanan bunyi tertinggi.";
+
+    dom.dropValue.textContent = drop.toFixed(1) + " dBA";
+    dom.dropNarrative.textContent = "Model zonasi menunjukkan penurunan sekitar " + drop.toFixed(1) + " dBA dari 10 meter ke 40 meter, sehingga jarak tetap menjadi faktor perlindungan paling dasar.";
+
+    dom.priorityValue.textContent = "Koridor 10 meter";
+    dom.priorityNarrative.textContent = "Zona ini masih berada pada kelas " + zone10.classInfo.label.toLowerCase() + ". Artinya, penghijauan membantu tetapi belum cukup jika berdiri sendiri untuk area paling dekat rel.";
+
+    dom.mapLiveLabel.textContent = stats.count + " titik aktif | rerata " + formatDb(stats.average);
+  }
+
+  function renderBufferChart() {
+    const labels = state.zoneStats.map(function(zone) {
+      return zone.distance + " m";
+    });
+    const values = state.zoneStats.map(function(zone) {
+      return zone.estimatedDb;
+    });
+
+    if (!state.bufferChart) {
+      state.bufferChart = new Chart(document.getElementById("bufferChart"), {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "Paparan indikatif",
+              data: values,
+              borderColor: "#143642",
+              backgroundColor: "rgba(20,54,66,0.12)",
+              fill: true,
+              tension: 0.32,
+              pointRadius: 5,
+              pointBackgroundColor: "#d9822b",
+              pointBorderColor: "#fff8ec",
+              pointBorderWidth: 2
+            },
+            {
+              label: "Ambang 55 dBA",
+              data: [55, 55, 55],
+              borderColor: "#4d8b68",
+              borderDash: [6, 6],
+              pointRadius: 0,
+              fill: false,
+              tension: 0
+            }
+          ]
+        },
+        options: chartOptions(40, 100)
+      });
+      return;
+    }
+
+    state.bufferChart.data.labels = labels;
+    state.bufferChart.data.datasets[0].data = values;
+    state.bufferChart.update("none");
+  }
+
+  function renderMitigationChart(values) {
+    const baseline = state.zoneStats.map(function(zone) {
+      return zone.estimatedDb;
+    });
+
+    if (!state.mitigationChart) {
+      state.mitigationChart = new Chart(document.getElementById("mitigationChart"), {
+        type: "bar",
+        data: {
+          labels: values.map(function(item) {
+            return item.distance + " m";
+          }),
+          datasets: [
+            {
+              label: "Sebelum vegetasi",
+              data: baseline,
+              backgroundColor: "rgba(217, 130, 43, 0.38)",
+              borderColor: "#d9822b",
+              borderWidth: 1.5,
+              borderRadius: 14
+            },
+            {
+              label: "Sesudah vegetasi",
+              data: values.map(function(item) {
+                return item.value;
+              }),
+              backgroundColor: "rgba(20, 54, 66, 0.74)",
+              borderColor: "#143642",
+              borderWidth: 1.5,
+              borderRadius: 14
+            }
+          ]
+        },
+        options: chartOptions(40, 100)
+      });
+      return;
+    }
+
+    state.mitigationChart.data.datasets[0].data = baseline;
+    state.mitigationChart.data.datasets[1].data = values.map(function(item) {
+      return item.value;
+    });
+    state.mitigationChart.update("none");
+  }
+
+  function chartOptions(min, max) {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: {
+          labels: {
+            color: "#264653",
+            font: {
+              family: "Bricolage Grotesque",
+              size: 12
+            }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.dataset.label + ": " + context.parsed.y + " dBA";
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: "#51656d",
+            font: {
+              family: "Bricolage Grotesque"
+            }
+          },
+          grid: {
+            color: "rgba(20,54,66,0.06)"
+          }
+        },
+        y: {
+          min: min,
+          max: max,
+          ticks: {
+            color: "#51656d",
+            callback: function(value) {
+              return value + " dBA";
+            },
+            font: {
+              family: "Bricolage Grotesque"
+            }
+          },
+          grid: {
+            color: "rgba(20,54,66,0.08)"
+          }
+        }
+      }
+    };
+  }
+
+  function updateMitigation() {
+    if (!state.zoneStats.length) return;
+
+    const percent = Number(dom.vegetationRange.value);
+    const reduction = vegetationReduction(percent);
+    const values = mitigatedZoneValues(percent);
+    const safeCount = values.filter(function(item) {
+      return item.value < 55;
+    }).length;
+    const hottestZone = values.reduce(function(top, current) {
+      return current.value > top.value ? current : top;
+    });
+    const recommendation = recommendedVegetation();
+    const value10 = values.find(function(item) { return item.distance === 10; });
+    const value20 = values.find(function(item) { return item.distance === 20; });
+    const value40 = values.find(function(item) { return item.distance === 40; });
+
+    state.vegetationPercent = percent;
+    dom.vegetationValue.textContent = percent + "%";
+    dom.simReduction.textContent = reduction.toFixed(1) + " dBA";
+    dom.simSafeZone.textContent = safeCount + "/3 zona";
+    dom.simPriorityZone.textContent = hottestZone.distance + " meter";
+    dom.reductionHint.textContent = percent === 0
+      ? "Geser slider untuk melihat potensi penurunan dBA per zona."
+      : "Pada skenario " + percent + "%, vegetasi diperkirakan menurunkan kebisingan sekitar " + reduction.toFixed(1) + " dBA pada seluruh zona.";
+
+    dom.impact10.textContent = formatDb(state.zoneStats.find(function(zone) { return zone.distance === 10; }).estimatedDb) + " -> " + formatDb(value10.value);
+    dom.impact20.textContent = formatDb(state.zoneStats.find(function(zone) { return zone.distance === 20; }).estimatedDb) + " -> " + formatDb(value20.value);
+    dom.impact40.textContent = formatDb(state.zoneStats.find(function(zone) { return zone.distance === 40; }).estimatedDb) + " -> " + formatDb(value40.value);
+
+    if (recommendation.status === "already-safe") {
+      dom.recommendationTitle.textContent = "Zona 40 meter sudah paling mendekati aman";
+      dom.recommendationText.textContent = "Dalam model ini, zona 40 meter sudah berada di sekitar " + formatDb(recommendation.resultDb) + ". Vegetasi tetap berguna untuk menambah kenyamanan visual dan kualitas udara.";
+      dom.recommendationBadge.textContent = "Zona 40 m relatif aman";
+      dom.recommendationBadge.className = "badge safe";
+    } else if (recommendation.status === "reachable") {
+      if (percent >= recommendation.percent) {
+        dom.recommendationTitle.textContent = "Skenario saat ini sudah cukup untuk zona 40 meter";
+        dom.recommendationText.textContent = "Dengan vegetasi " + percent + "%, zona 40 meter diproyeksikan turun hingga " + formatDb(value40.value) + ". Namun zona 10 dan 20 meter masih membutuhkan perhatian tambahan.";
+        dom.recommendationBadge.textContent = "Target 40 m tercapai";
+        dom.recommendationBadge.className = "badge safe";
+      } else {
+        dom.recommendationTitle.textContent = "Mulai sekitar " + recommendation.percent + "% vegetasi untuk zona 40 meter";
+        dom.recommendationText.textContent = "Saat ini skenario " + percent + "% baru menurunkan zona 40 meter ke " + formatDb(value40.value) + ". Sekitar " + recommendation.percent + "% vegetasi dibutuhkan untuk mendorong zona ini ke bawah 55 dBA.";
+        dom.recommendationBadge.textContent = "Saran minimum " + recommendation.percent + "%";
+        dom.recommendationBadge.className = "badge accent";
+      }
+    } else {
+      dom.recommendationTitle.textContent = "Vegetasi belum cukup jika berdiri sendiri";
+      dom.recommendationText.textContent = "Bahkan pada 100% vegetasi, zona 40 meter masih berada di sekitar " + formatDb(recommendation.resultDb) + ". Perlu strategi tambahan seperti barrier akustik atau pengaturan setback bangunan.";
+      dom.recommendationBadge.textContent = "Butuh mitigasi gabungan";
+      dom.recommendationBadge.className = "badge warning";
+    }
+
+    renderMitigationChart(values);
+  }
+
+  function enhanceHeaderOnScroll() {
+    dom.header.classList.toggle("is-scrolled", window.scrollY > 18);
+  }
+
+  function setupReveal() {
+    const observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.16 });
+
+    document.querySelectorAll(".reveal").forEach(function(element) {
+      observer.observe(element);
+    });
+  }
+
+  function setupAudio() {
+    state.audio = new Audio("suara.mp3");
+    state.audio.preload = "auto";
+
+    dom.audioToggle.addEventListener("click", function() {
+      if (!state.audio) return;
+
+      if (state.audio.paused) {
+        state.audio.play().then(function() {
+          dom.audioToggle.textContent = "Hentikan Suasana Rel";
+        }).catch(function() {
+          showStatus("Audio tidak bisa diputar. Pastikan file suara.mp3 tersedia dan browser mengizinkan audio.", "error");
+        });
+      } else {
+        state.audio.pause();
+        state.audio.currentTime = 0;
+        dom.audioToggle.textContent = "Dengar Suasana Rel";
+      }
+    });
+
+    state.audio.addEventListener("ended", function() {
+      dom.audioToggle.textContent = "Dengar Suasana Rel";
+    });
+  }
+
+  function setupInteractions() {
+    dom.zoneButtons.forEach(function(button) {
+      button.addEventListener("click", function() {
+        applyZoneFocus(button.dataset.zone);
+      });
+    });
+
+    dom.vegetationRange.addEventListener("input", updateMitigation);
+
+    state.map.on("click", function(event) {
+      const nearest = findNearestSample(event.latlng);
+      if (!nearest) return;
+      updateSelection(nearest, event.latlng, true);
+    });
+
+    window.addEventListener("scroll", enhanceHeaderOnScroll, { passive: true });
+    window.addEventListener("resize", function() {
+      if (state.map) {
+        state.map.invalidateSize();
+      }
+    });
+  }
+
+  function setInitialSelection() {
+    const peakSample = state.samples.reduce(function(top, current) {
+      return current.db > top.db ? current : top;
+    });
+    updateSelection(peakSample, L.latLng(peakSample.lat, peakSample.lng), false);
+  }
+
+  function fitMapToData() {
+    const group = L.featureGroup([state.railLayer, state.sampleLayer]);
+    state.map.fitBounds(group.getBounds().pad(0.12));
+  }
+
+  function hydrateData(railData, samples) {
+    state.railData = railData;
+    state.combinedRail = turf.combine(railData).features[0];
+    state.samples = samples.map(function(sample) {
+      const point = turf.point([sample.lng, sample.lat]);
+      return Object.assign({}, sample, {
+        distanceToRail: turf.pointToLineDistance(point, state.combinedRail, { units: "kilometers" }) * 1000
+      });
+    });
+
+    const stats = getSampleStats(state.samples);
+    state.zoneStats = estimateZoneStats(stats.average);
+
+    addRailLayer(railData);
+    addSampleLayer(state.samples);
+    addBufferLayers();
+    fitMapToData();
+    applyZoneFocus("all");
+    updateNarrativeBlocks(stats);
+    renderBufferChart();
+    updateMitigation();
+    setInitialSelection();
+
+    hideStatus();
+  }
+
+  async function loadData() {
+    const railPromise = fetch("jrelka.geojson").then(function(response) {
+      if (!response.ok) {
+        throw new Error("Gagal memuat jrelka.geojson");
+      }
+      return response.json();
+    });
+
+    const csvPromise = fetchTextWithFallback(["KOORD.csv", "koord.csv"]);
+
+    const results = await Promise.all([railPromise, csvPromise]);
+    return {
+      railData: results[0],
+      samples: parseCsvToSamples(results[1])
+    };
+  }
+
+  async function init() {
+    dom.year.textContent = new Date().getFullYear();
+    enhanceHeaderOnScroll();
+    setupReveal();
+    setupAudio();
+    initMap();
+    setupInteractions();
+    showStatus("Memuat data peta dan sampel kebisingan...");
+
+    try {
+      const data = await loadData();
+      hydrateData(data.railData, data.samples);
+    } catch (error) {
+      showStatus("Data tidak bisa dimuat. Jalankan halaman melalui local server agar file CSV dan GeoJSON dapat dibaca browser.", "error");
+      dom.mapLiveLabel.textContent = "Gagal memuat data";
+      dom.publicMessage.textContent = "Browser biasanya menolak membaca file lokal jika halaman dibuka langsung tanpa server. Gunakan local server sederhana agar peta aktif.";
+      console.error(error);
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
